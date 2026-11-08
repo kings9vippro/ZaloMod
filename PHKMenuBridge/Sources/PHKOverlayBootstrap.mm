@@ -41,8 +41,6 @@ static UIViewController *PHKTopController(UIViewController *base){
             if(![scene isKindOfClass:[UIWindowScene class]])continue;
             for(UIWindow *w in ((UIWindowScene *)scene).windows)[self attachToWindow:w];
         }
-    }else{
-        for(UIWindow *w in UIApplication.sharedApplication.windows)[self attachToWindow:w];
     }
     [PHKLegacyAdapter.shared hideFloatingButtonIfPresent];
     // Stop the legacy orb being recreated. Does not interfere with original menu actions.
@@ -71,7 +69,7 @@ static UIViewController *PHKTopController(UIViewController *base){
             for(UIWindow *w in ((UIWindowScene *)scene).windows)if(!w.hidden && w.windowLevel==UIWindowLevelNormal && w!=self.overlayWindow)return w;
         }
     }
-    return UIApplication.sharedApplication.keyWindow;
+    return nil;
 }
 - (void)open {
     if(self.overlayWindow || ![NSThread isMainThread])return;
@@ -84,7 +82,7 @@ static UIViewController *PHKTopController(UIViewController *base){
     }
     if(!overlay)overlay=[[UIWindow alloc]initWithFrame:UIScreen.mainScreen.bounds];
     overlay.windowLevel=UIWindowLevelAlert-2;
-    __weak typeof(self) weakSelf=self;
+    __weak PHKMenuCoordinator *weakSelf=self;
     PHKOverlayController *panel=[[PHKOverlayController alloc]initWithCloseHandler:^{[weakSelf close];}];
     panel.legacyPresenter=PHKTopController(underlying.rootViewController);
     overlay.rootViewController=panel;

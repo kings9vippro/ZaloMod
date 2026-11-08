@@ -50,7 +50,7 @@ static UIImage *PHKImage(NSString *name) {
        if(symbol.length)[b setImage:[UIImage systemImageNamed:symbol] forState:UIControlStateNormal];
     }
     b.backgroundColor=[UIColor colorWithRed:.14 green:.21 blue:.32 alpha:.95];
-    b.layer.cornerRadius=13;b.contentEdgeInsets=UIEdgeInsetsMake(12,13,12,13);
+    b.layer.cornerRadius=13;
     return b;
 }
 - (void)loadView {
