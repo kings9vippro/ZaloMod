@@ -1,0 +1,40 @@
+name: Build iOS UI Demo
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios-build:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+      - name: Verify C++ core
+        run: |
+          clang++ -std=c++17 Core/Settings.cpp Core/tests/settings_test.cpp -o /tmp/phk_core_tests
+          /tmp/phk_core_tests
+      - name: Build iOS simulator app (unsigned)
+        run: |
+          xcodebuild -project PHKControl.xcodeproj -scheme PHKControl -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Build unsigned iOS device app
+        run: |
+          xcodebuild -project PHKControl.xcodeproj -scheme PHKControl -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build-device CODE_SIGNING_ALLOWED=NO build
+      - name: Package UNSIGNED IPA (not installable until signed)
+        shell: bash
+        run: |
+          mkdir -p out/Payload
+          cp -R build-device/Build/Products/Release-iphoneos/PHKControl.app out/Payload/
+          cd out && zip -qr PHKControl-UNSIGNED.ipa Payload
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PHKControl-unsigned-ipa
+          path: out/PHKControl-UNSIGNED.ipa
+          if-no-files-found: error

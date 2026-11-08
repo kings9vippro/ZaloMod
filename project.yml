@@ -1,0 +1,35 @@
+name: PHKControl
+options:
+  bundleIdPrefix: dev.phananhkhoi
+  minimumXcodeGenVersion: 2.38.0
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    CLANG_CXX_LANGUAGE_STANDARD: c++17
+    CLANG_CXX_LIBRARY: libc++
+    IPHONEOS_DEPLOYMENT_TARGET: '16.0'
+    TARGETED_DEVICE_FAMILY: '1'
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  PHKControl:
+    type: application
+    platform: iOS
+    deploymentTarget: '16.0'
+    sources:
+      - path: iOS/Sources
+      - path: Core
+        excludes:
+          - tests/**
+      - path: iOS/Resources/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.phananhkhoi.control
+        PRODUCT_NAME: PHKControl
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: PHK Control
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        SWIFT_OBJC_BRIDGING_HEADER: iOS/Sources/Bridge/PHKBridge.h
+        ASSETCATALOG_COMPILER_APPICON_NAME: ''
+    scheme:
+      testTargets: []
