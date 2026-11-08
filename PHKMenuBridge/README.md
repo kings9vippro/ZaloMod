@@ -1,4 +1,4 @@
-# PHK Menu Bridge 2.1 — Developer Phan Anh Khôi
+# PHK Menu Bridge 3.0 — Developer Phan Anh Khôi
 
 A **separate iOS ARM64 companion dylib** for the specific `ZaloModVIP.dylib` (SHA-256 `564b8539a690c988975b6b80d884c68a5a476482579b24a3eacac459a35a000d`) provided for analysis. This project **does not replace the original implementation of its hooks** or claim access to Zalo's private source code. It draws a new navigation UI and delegates allowlisted controls to methods in the already-loaded binary through Objective-C runtime selectors.
 
@@ -16,6 +16,13 @@ A **separate iOS ARM64 companion dylib** for the specific `ZaloModVIP.dylib` (SH
 - Objective-C method signature/arity checks for old class getters, toggle actions, and zero-argument actions. Unsupported toggle controls are disabled instead of blindly messaged.
 - Group actions validate required fields, length (up to 1024 characters), and successful synchronization before invoking the old action.
 - Clearer diagnostics when a method cannot be called. These checks reduce some ABI hazards but cannot make proprietary runtime code or server-side features inherently safe.
+
+## New in 3.0
+- C++17 four-finger state machine, duration/movement/cancellation checks and new unit tests.
+- UIApplication sendEvent fallback works alongside existing UIWindow gesture recognizers. Native events are forwarded, never suppressed.
+- A brief PHK MENU 3.0 banner at startup confirms the plugin was actually loaded.
+- Rechecks the old orb suppression after windows and legacy classes initialize.
+- A packaged dylib MUST be referenced by the app's Mach-O LC_LOAD_DYLIB entry; simply copying it into Frameworks is insufficient.
 
 ## What is NOT built or verified
 

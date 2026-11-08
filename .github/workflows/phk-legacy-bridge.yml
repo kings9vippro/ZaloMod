@@ -17,6 +17,8 @@ jobs:
         run: |
           clang++ -std=c++17 -Wall -Wextra -Werror PHKMenuBridge/Core/PHKValidation.cpp PHKMenuBridge/Tests/validation_test.cpp -o /tmp/phk-check
           /tmp/phk-check
+          clang++ -std=c++17 -Wall -Wextra -Werror PHKMenuBridge/Core/PHKTouchTracker.cpp PHKMenuBridge/Tests/touch_tracker_test.cpp -o /tmp/phk-touches
+          /tmp/phk-touches
       - name: Compile independent arm64 dylib for iOS
         shell: bash
         run: |
@@ -30,7 +32,9 @@ jobs:
             PHKMenuBridge/Sources/PHKLegacyAdapter.mm \
             PHKMenuBridge/Sources/PHKOverlayController.mm \
             PHKMenuBridge/Sources/PHKOverlayBootstrap.mm \
+            PHKMenuBridge/Sources/PHKGestureEngine.mm \
             PHKMenuBridge/Core/PHKValidation.cpp \
+            PHKMenuBridge/Core/PHKTouchTracker.cpp \
             -framework UIKit -framework Foundation -framework QuartzCore -o output/PHKMenuBridge.dylib
           file output/PHKMenuBridge.dylib
           xcrun vtool -show-build output/PHKMenuBridge.dylib || true

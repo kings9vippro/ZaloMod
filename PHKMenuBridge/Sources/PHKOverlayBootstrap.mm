@@ -65,7 +65,7 @@ static UIViewController *PHKTopController(UIViewController *base){
     if(@available(iOS 13.0,*)){
         for(UIScene *scene in UIApplication.sharedApplication.connectedScenes){
             if(![scene isKindOfClass:[UIWindowScene class]]||scene.activationState!=UISceneActivationStateForegroundActive)continue;
-            for(UIWindow *w in ((UIWindowScene *)scene).windows)if(w.isKeyWindow && w!=self.overlayWindow)return w;
+            for(UIWindow *w in ((UIWindowScene *)scene).windows)if(w.isKeyWindow && w!=self.overlayWindow && w.windowLevel==UIWindowLevelNormal)return w;
             for(UIWindow *w in ((UIWindowScene *)scene).windows)if(!w.hidden && w.windowLevel==UIWindowLevelNormal && w!=self.overlayWindow)return w;
         }
     }

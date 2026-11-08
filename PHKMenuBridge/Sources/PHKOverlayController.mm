@@ -76,7 +76,7 @@ static UIImage *PHKImage(NSString *name) {
     wall.translatesAutoresizingMaskIntoConstraints=NO;wall.contentMode=UIViewContentModeScaleAspectFill;
     wall.clipsToBounds=YES;[sheet addSubview:wall];
     UIView *shade=[UIView new];shade.translatesAutoresizingMaskIntoConstraints=NO;
-    shade.backgroundColor=[UIColor colorWithRed:.025 green:.036 blue:.066 alpha:.84];[sheet addSubview:shade];
+    shade.backgroundColor=[UIColor colorWithRed:.025 green:.036 blue:.066 alpha:.66];[sheet addSubview:shade];
     [NSLayoutConstraint activateConstraints:@[
         [wall.leadingAnchor constraintEqualToAnchor:sheet.leadingAnchor],
         [wall.trailingAnchor constraintEqualToAnchor:sheet.trailingAnchor],
