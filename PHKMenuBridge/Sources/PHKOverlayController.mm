@@ -224,7 +224,7 @@ static UIImage *PHKImage(NSString *name) {
     [row addArrangedSubview:copy];
     UISwitch *toggle=[UISwitch new];toggle.onTintColor=PHKBlue();toggle.accessibilityLabel=title;
     toggle.on=[PHKLegacyAdapter.shared readFlag:reader];
-    toggle.enabled=PHKLegacyAdapter.shared.isAvailable;
+    toggle.enabled=[PHKLegacyAdapter.shared canToggle:action reader:reader];
     toggle.accessibilityValue=toggle.on?@"Bật":@"Tắt";
     objc_setAssociatedObject(toggle,@selector(togglePressed:),action,OBJC_ASSOCIATION_COPY_NONATOMIC);
     objc_setAssociatedObject(toggle,@selector(readFlagForToggle:),reader,OBJC_ASSOCIATION_COPY_NONATOMIC);
@@ -360,6 +360,7 @@ static UIImage *PHKImage(NSString *name) {
         [self addAction:@"Xem mô phỏng khóa tài khoản" detail:@"Chỉ là màn hình mô phỏng, không thay đổi trạng thái tài khoản." selector:@"actionPreviewLockedAccount"];
         [self addAction:@"Mở toàn bộ menu gốc" detail:@"Đường dự phòng để không mất các tính năng chưa ánh xạ." selector:@"legacy"];
         [self addHeader:@"Cử chỉ mở menu" desc:@"Chạm một lần bằng bốn ngón tay trên màn hình chính. Không cần nút nổi."];
+        [self addHeader:@"Kiểm tra tương thích" desc:PHKLegacyAdapter.shared.isAvailable?@"Đã nhận diện controller gốc. Các công tắc thiếu hoặc sai chữ ký sẽ tự khóa để tránh lỗi.":@"Không tìm thấy controller gốc. Thư viện mới không thay thế hook cũ."];
         [self addHeader:@"Bảo vệ phiên" desc:@"Không tự động đọc cookie; tính năng xuất cấu hình nhạy cảm chỉ có ở menu gốc, cần thận trọng."];
     }
     UILabel *feedback=[self label:@"" size:12 weight:UIFontWeightMedium color:PHKBlue()];
@@ -389,13 +390,26 @@ static UIImage *PHKImage(NSString *name) {
         BOOL b=[PHKLegacyAdapter.shared setLegacyText:self.fields[@"txtArtistName"].text field:@"txtArtistName"];
         [self feedback:(a&&b)?@"Đã đồng bộ nội dung vào các trường gốc.":@"Không tìm thấy trường gốc."];return;
     }
-    if([@[@"actionSendMessage",@"actionJoinGroup",@"actionKickMember",@"actionLeaveGroup"] containsObject:s]){
-        for(NSString *key in @[@"txtTargetId",@"txtMessageContent",@"txtGroupLinkOrId",@"txtKickUid"]){
-            UITextField *field=self.fields[key];if(field)[PHKLegacyAdapter.shared setLegacyText:field.text field:key];
+    NSDictionary<NSString *,NSArray<NSString *> *> *required=@{
+        @"actionSendMessage":@[@"txtTargetId",@"txtMessageContent"],
+        @"actionJoinGroup":@[@"txtGroupLinkOrId"],
+        @"actionKickMember":@[@"txtKickUid"],
+        @"actionLeaveGroup":@[]
+    };
+    NSArray<NSString *> *keys=required[s];
+    if(keys){
+        NSCharacterSet *ws=[NSCharacterSet whitespaceAndNewlineCharacterSet];
+        for(NSString *key in keys){
+            NSString *value=[self.fields[key].text stringByTrimmingCharactersInSet:ws];
+            if(!value.length){[self feedback:@"Thiếu thông tin bắt buộc, chưa gửi yêu cầu."];return;}
+            if(value.length>1024){[self feedback:@"Đầu vào dài quá 1024 ký tự."];return;}
+            if(![PHKLegacyAdapter.shared setLegacyText:value field:key]){
+                [self feedback:@"Không thể đồng bộ trường dữ liệu với phiên bản gốc."];return;
+            }
         }
     }
     BOOL ok=[PHKLegacyAdapter.shared applyAction:s];
-    [self feedback:ok?@"Đã gọi xử lý gốc. Hãy kiểm tra kết quả thực tế.":@"Không tìm thấy phương thức trong dylib gốc."];
+    [self feedback:ok?@"Đã gọi xử lý gốc. Hãy kiểm tra kết quả thực tế.":@"Không tìm thấy phương thức tương thích trong dylib gốc."];
 }
 - (void)openOriginalPressed {
     // Save presenting controller before closing the overlay.

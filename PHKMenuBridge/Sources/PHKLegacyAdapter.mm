@@ -23,10 +23,25 @@ static NSSet<NSString *> *PHKActionAllowlist(void) {
         @"actionStartBot",@"actionStopBot",@"actionPreviewLockedAccount"]];});
     return s;
 }
+// Guard Objective-C message sends against ABI signature changes across releases.
+static BOOL PHKHasMethod(Class klass, SEL selector, unsigned arguments, char resultType, BOOL objectArgument) {
+    if (!klass || !selector) return NO;
+    Method method=class_getInstanceMethod(klass,selector);
+    if(!method || method_getNumberOfArguments(method)!=arguments)return NO;
+    if(resultType){
+        char result[32]={0};method_getReturnType(method,result,sizeof(result));
+        if(result[0]!=resultType && !(resultType=='B' && result[0]=='c'))return NO;
+    }
+    if(objectArgument){
+        char argument[32]={0};method_getArgumentType(method,2,argument,sizeof(argument));
+        if(argument[0]!='@')return NO;
+    }
+    return YES;
+}
 static id PHKInstance(void) {
     Class type=NSClassFromString(@"ZaloModViewController");
     SEL shared=NSSelectorFromString(@"sharedInstance");
-    if (!type || ![type respondsToSelector:shared])return nil;
+    if (!type || !PHKHasMethod(object_getClass(type),shared,2,'@',NO))return nil;
     return ((id(*)(id,SEL))objc_msgSend)(type,shared);
 }
 static void PHKLoadLegacyUI(id instance) {
@@ -36,7 +51,7 @@ static void PHKLoadLegacyUI(id instance) {
 }
 static BOOL PHKWriteTextField(id instance,NSString *prop,NSString *value) {
     SEL read=NSSelectorFromString(prop);
-    if (!instance||![instance respondsToSelector:read])return NO;
+    if (!instance||!PHKHasMethod(object_getClass(instance),read,2,'@',NO))return NO;
     id field=((id(*)(id,SEL))objc_msgSend)(instance,read);
     if (![field isKindOfClass:[UITextField class]])return NO;
     ((UITextField *)field).text=value;
@@ -46,6 +61,14 @@ static BOOL PHKWriteTextField(id instance,NSString *prop,NSString *value) {
 @implementation PHKLegacyAdapter
 + (instancetype)shared {static PHKLegacyAdapter *obj;static dispatch_once_t t;dispatch_once(&t,^{obj=[PHKLegacyAdapter new];});return obj;}
 - (BOOL)isAvailable {return PHKInstance()!=nil;}
+- (BOOL)canToggle:(NSString *)actionName reader:(NSString *)selectorName {
+    if (![PHKToggleAllowlist() containsObject:actionName])return NO;
+    id instance=PHKInstance();Class type=NSClassFromString(@"ZaloModViewController");
+    SEL action=NSSelectorFromString(actionName),reader=NSSelectorFromString(selectorName);
+    return instance && type &&
+        PHKHasMethod(object_getClass(instance),action,3,'v',YES) &&
+        PHKHasMethod(object_getClass(type),reader,2,'B',NO);
+}
 - (BOOL)readFlag:(NSString *)selectorName {
     static NSSet *allowed; static dispatch_once_t once;
     dispatch_once(&once, ^{allowed=[NSSet setWithArray:@[
@@ -56,20 +79,20 @@ static BOOL PHKWriteTextField(id instance,NSString *prop,NSString *value) {
         @"isProfileMusicEnabled",@"isBotRunning"]];});
     if (![allowed containsObject:selectorName])return NO;
     Class c=NSClassFromString(@"ZaloModViewController");SEL s=NSSelectorFromString(selectorName);
-    if(!c || ![c respondsToSelector:s])return NO;
+    if(!PHKHasMethod(object_getClass(c),s,2,'B',NO))return NO;
     return ((BOOL(*)(id,SEL))objc_msgSend)(c,s);
 }
 - (BOOL)applyToggle:(NSString *)actionName sender:(UISwitch *)sender {
     if (![PHKToggleAllowlist() containsObject:actionName])return NO;
     id vc=PHKInstance();SEL s=NSSelectorFromString(actionName);
-    if(!vc || ![vc respondsToSelector:s])return NO;
+    if(!vc || !PHKHasMethod(object_getClass(vc),s,3,'v',YES))return NO;
     PHKLoadLegacyUI(vc);
     ((void(*)(id,SEL,id))objc_msgSend)(vc,s,sender);return YES;
 }
 - (BOOL)applyAction:(NSString *)actionName {
     if(![PHKActionAllowlist() containsObject:actionName])return NO;
     id vc=PHKInstance();SEL s=NSSelectorFromString(actionName);
-    if(!vc||![vc respondsToSelector:s])return NO;
+    if(!vc||!PHKHasMethod(object_getClass(vc),s,2,0,NO))return NO;
     PHKLoadLegacyUI(vc);
     ((void(*)(id,SEL))objc_msgSend)(vc,s);return YES;
 }

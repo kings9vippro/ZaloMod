@@ -1,4 +1,4 @@
-# PHK Menu Bridge 2.0 — Developer Phan Anh Khôi
+# PHK Menu Bridge 2.1 — Developer Phan Anh Khôi
 
 A **separate iOS ARM64 companion dylib** for the specific `ZaloModVIP.dylib` (SHA-256 `564b8539a690c988975b6b80d884c68a5a476482579b24a3eacac459a35a000d`) provided for analysis. This project **does not replace the original implementation of its hooks** or claim access to Zalo's private source code. It draws a new navigation UI and delegates allowlisted controls to methods in the already-loaded binary through Objective-C runtime selectors.
 
@@ -10,6 +10,12 @@ A **separate iOS ARM64 companion dylib** for the specific `ZaloModVIP.dylib` (SH
 - 13 old toggle actions and 13 independent legacy actions bridged by selector allowlists. Original font/color button objects are reused **with their original tags**, not guessed or regenerated. TTL and bot prefix have C++17 input validation; text entries pass through the original text fields.
 - One optional **Legacy fallback** button to expose all originally present functions if a mapping is unavailable. This is deliberately retained because eliminating it would falsely claim parity with a proprietary binary whose complete runtime behavior is untested.
 - No cookie reading, exporting, network requests, telemetry, fake latency or fake success messages in the new bridge. The original dylib is still subject to its own limitations and risks.
+
+## New in 2.1
+
+- Objective-C method signature/arity checks for old class getters, toggle actions, and zero-argument actions. Unsupported toggle controls are disabled instead of blindly messaged.
+- Group actions validate required fields, length (up to 1024 characters), and successful synchronization before invoking the old action.
+- Clearer diagnostics when a method cannot be called. These checks reduce some ABI hazards but cannot make proprietary runtime code or server-side features inherently safe.
 
 ## What is NOT built or verified
 

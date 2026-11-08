@@ -4,6 +4,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)shared;
 - (BOOL)isAvailable;
 - (BOOL)readFlag:(NSString *)selectorName;
+- (BOOL)canToggle:(NSString *)actionName reader:(NSString *)selectorName;
 - (BOOL)applyToggle:(NSString *)actionName sender:(UISwitch *)sender;
 - (BOOL)applyAction:(NSString *)actionName;
 - (BOOL)setLegacyText:(NSString *)value field:(NSString *)field;

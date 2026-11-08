@@ -12,4 +12,7 @@ for mapping in i['toggle_mappings']:
 assert 'actionExportBotConfig' not in objc and 'actionExportBotConfig' not in view
 assert 'NSHTTPCookieStorage' not in objc + view
 assert 'fourFingerTapped' in (p/'Sources/PHKOverlayBootstrap.mm').read_text()
-print('PASS: all 13 old toggle controls mapped, export excluded, four-finger trigger present')
+assert 'PHKHasMethod' in objc
+assert 'canToggle:action reader:reader' in view
+assert 'Thiếu thông tin bắt buộc' in view
+print('PASS: legacy controls mapped, ABI guards and group validation present')
