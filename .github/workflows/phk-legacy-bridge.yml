@@ -1,0 +1,52 @@
+name: Build PHK Menu Bridge dylib
+on:
+  push:
+    paths:
+      - 'PHKMenuBridge/**'
+      - '.github/workflows/phk-legacy-bridge.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate C++ input guards
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Werror PHKMenuBridge/Core/PHKValidation.cpp PHKMenuBridge/Tests/validation_test.cpp -o /tmp/phk-check
+          /tmp/phk-check
+      - name: Compile independent arm64 dylib for iOS
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p output
+          xcrun --sdk iphoneos clang++ -std=c++17 -x objective-c++ -arch arm64 \
+            -isysroot "$SDK" -miphoneos-version-min=15.1 -O2 -fobjc-arc \
+            -fobjc-exceptions -fvisibility=hidden -dynamiclib \
+            -install_name '@rpath/PHKMenuBridge.dylib' \
+            PHKMenuBridge/Sources/PHKLegacyAdapter.mm \
+            PHKMenuBridge/Sources/PHKOverlayController.mm \
+            PHKMenuBridge/Sources/PHKOverlayBootstrap.mm \
+            PHKMenuBridge/Core/PHKValidation.cpp \
+            -framework UIKit -framework Foundation -framework QuartzCore -o output/PHKMenuBridge.dylib
+          file output/PHKMenuBridge.dylib
+          xcrun vtool -show-build output/PHKMenuBridge.dylib || true
+      - name: Build resource bundle
+        run: |
+          mkdir -p output/PHKMenuResources.bundle
+          cp PHKMenuBridge/Resources/*.jpg output/PHKMenuResources.bundle/
+          cat > output/PHKMenuResources.bundle/Info.plist <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict><key>CFBundleIdentifier</key><string>dev.phananhkhoi.menuresources</string><key>CFBundleName</key><string>PHKMenuResources</string><key>CFBundlePackageType</key><string>BNDL</string><key>CFBundleVersion</key><string>2</string></dict></plist>
+          PLIST
+      - name: Package unsigned debug artifact
+        run: cd output && zip -q -r PHKMenuBridge-UNSIGNED.zip PHKMenuBridge.dylib PHKMenuResources.bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PHKMenuBridge-unsigned-dylib
+          path: output/PHKMenuBridge-UNSIGNED.zip
+          if-no-files-found: error

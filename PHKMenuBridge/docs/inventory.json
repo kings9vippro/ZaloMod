@@ -1,0 +1,105 @@
+{
+  "source_sha256": "564b8539a690c988975b6b80d884c68a5a476482579b24a3eacac459a35a000d",
+  "objc_methods": 278,
+  "hook_symbols": 63,
+  "toggle_mappings": [
+    {
+      "toggle": "toggleAntiUndo:",
+      "reader": "isAntiUndoEnabled",
+      "toggle_address": "0xE6D8",
+      "reader_address": "0x5B4C",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleBugOriginal:",
+      "reader": "isBugOriginalEnabled",
+      "toggle_address": "0xE778",
+      "reader_address": "0x68CC",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleGhostSeen:",
+      "reader": "isGhostSeenEnabled",
+      "toggle_address": "0xEB74",
+      "reader_address": "0x6834",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleHideTyping:",
+      "reader": "isHideTypingEnabled",
+      "toggle_address": "0xEC14",
+      "reader_address": "0x6880",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleAntiRain:",
+      "reader": "isAntiRainEnabled",
+      "toggle_address": "0xECB4",
+      "reader_address": "0x69B4",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleChatBg:",
+      "reader": "isChatBgEnabled",
+      "toggle_address": "0xED74",
+      "reader_address": "0x6A28",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleBugZBusiness:",
+      "reader": "isBugZBusinessEnabled",
+      "toggle_address": "0xE818",
+      "reader_address": "0x6940",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleBlockZStyle:",
+      "reader": "isBlockZStyleEnabled",
+      "toggle_address": "0xE8B8",
+      "reader_address": "0x62FC",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleBugZLStyle:",
+      "reader": "isBugZLStyleEnabled",
+      "toggle_address": "0xE990",
+      "reader_address": "0x6370",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleAdBlock:",
+      "reader": "isAdBlockEnabled",
+      "toggle_address": "0xE994",
+      "reader_address": "0x6388",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleUnlimitedMedia:",
+      "reader": "isUnlimitedMediaEnabled",
+      "toggle_address": "0xEA34",
+      "reader_address": "0x63FC",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleUnlockRBT:",
+      "reader": "isUnlockRBTEnabled",
+      "toggle_address": "0xEAD4",
+      "reader_address": "0x6470",
+      "status": "bridged-not-runtime-verified"
+    },
+    {
+      "toggle": "toggleProfileMusic:",
+      "reader": "isProfileMusicEnabled",
+      "toggle_address": "0xF3A0",
+      "reader_address": "0x6B1C",
+      "status": "bridged-not-runtime-verified"
+    }
+  ],
+  "unverified": [
+    "device runtime",
+    "server results",
+    "multi-account",
+    "IPA signing",
+    "old binary repackaging"
+  ]
+}
