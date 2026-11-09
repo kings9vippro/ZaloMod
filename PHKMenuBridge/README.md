@@ -1,4 +1,4 @@
-# PHK Menu Bridge 3.1 — Developer Phan Anh Khôi
+# PHK Menu Bridge 3.2 — Developer Phan Anh Khôi
 
 A **separate iOS ARM64 companion dylib** for the specific `ZaloModVIP.dylib` (SHA-256 `564b8539a690c988975b6b80d884c68a5a476482579b24a3eacac459a35a000d`) provided for analysis. This project **does not replace the original implementation of its hooks** or claim access to Zalo's private source code. It draws a new navigation UI and delegates allowlisted controls to methods in the already-loaded binary through Objective-C runtime selectors.
 
@@ -61,3 +61,13 @@ See `docs/LEGACY-COVERAGE.md` and `docs/inventory.json` for the static method in
 - Verify LC_LOAD_DYLIB for PHKMenuBridge.dylib and check that the IPA is a complete ZIP archive before signing.
 - Keep the original ZaloModVIP.dylib: this bridge is not a replacement for its proprietary hooks. Static offsets alone cannot reconstruct the original features.
 - The previous v3 IPA was invalid as a ZIP; do not use that file.
+
+## 3.2 runtime and allocation hardening
+
+- Three-finger gesture tracking now uses a fixed three-slot C++17 array rather than an allocating unordered_map in a noexcept method.
+- Runtime gesture interception installs on the concrete UIApplication subclass, not only the UIKit superclass, so sendEvent overrides can be observed.
+- The state machine ignores repeated began events and resets on app background.
+- Exported diagnostics: `PHKBridgeVersion()`, `PHKBridgeIsLoaded()`, and `PHKBridgeOpenMenu()`. The latter can be invoked from a permitted host integration to distinguish "not loaded" from "gesture not recognized".
+- Added stack protector and CI checks that the diagnostics appear among exported symbols.
+
+**IMPORTANT:** This project remains a menu/adapter companion. It cannot replace the original hooks, session features, or ZaloModVIP.dylib. There is no verified safe single-dylib parity; binary offsets are version-specific and are not used as a substitute for source code.

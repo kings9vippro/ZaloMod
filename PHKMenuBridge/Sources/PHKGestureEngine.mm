@@ -5,10 +5,27 @@
 #import "PHKLegacyAdapter.h"
 #import "../Core/PHKTouchTracker.hpp"
 // Independent event-level fallback. System touch events pass through unchanged.
+extern "C" __attribute__((visibility("default"))) const char *PHKBridgeVersion(void){return "3.2.0";}
+extern "C" __attribute__((visibility("default"))) int PHKBridgeIsLoaded(void){return 1;}
+extern "C" __attribute__((visibility("default"))) void PHKBridgeOpenMenu(void){
+    void (^present)(void)=^{
+        Class type=NSClassFromString(@"PHKMenuCoordinator");
+        SEL shared=NSSelectorFromString(@"shared");
+        if(!type || ![type respondsToSelector:shared]){
+            NSLog(@"[PHK 3.2] menu coordinator unavailable");return;
+        }
+        id controller=((id(*)(id,SEL))objc_msgSend)(type,shared);
+        SEL open=NSSelectorFromString(@"open");
+        if(controller && [controller respondsToSelector:open])((void(*)(id,SEL))objc_msgSend)(controller,open);
+        else NSLog(@"[PHK 3.2] menu open selector unavailable");
+    };
+    if(NSThread.isMainThread)present();else dispatch_async(dispatch_get_main_queue(),present);
+}
 @interface PHKGestureEngine : NSObject
 + (instancetype)shared;
 - (void)install;
 - (void)consumeEvent:(UIEvent *)event;
+- (void)resetGesture;
 @end
 static void (*PHKOriginalSendEvent)(id,SEL,UIEvent*)=nullptr;
 static BOOL PHKHookInstalled=NO,PHKBadgeDisplayed=NO,PHKOrbDisabled=NO;
@@ -53,7 +70,7 @@ static void PHKInterceptSendEvent(id object,SEL command,UIEvent *event){
     if(PHKBadgeDisplayed || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
     UIWindow *window=[self foregroundWindow];if(!window)return;
     PHKBadgeDisplayed=YES;
-    UILabel *badge=[UILabel new];badge.text=@"PHK MENU 3.1  ·  CHẠM 3 NGÓN";
+    UILabel *badge=[UILabel new];badge.text=@"PHK MENU 3.2  ·  CHẠM 3 NGÓN";
     badge.textAlignment=NSTextAlignmentCenter;
     badge.font=[UIFont systemFontOfSize:11 weight:UIFontWeightSemibold];
     badge.textColor=UIColor.whiteColor;
@@ -74,18 +91,28 @@ static void PHKInterceptSendEvent(id object,SEL command,UIEvent *event){
             completion:^(BOOL done){(void)done;[badge removeFromSuperview];}];
     }];
 }
+- (void)resetGesture {_state.reset();_openScheduled=NO;}
 - (void)install {
     if(![NSThread isMainThread]){dispatch_async(dispatch_get_main_queue(),^{[self install];});return;}
     if(!PHKHookInstalled){
-        Method method=class_getInstanceMethod([UIApplication class],@selector(sendEvent:));
+        // An app may override sendEvent: in its UIApplication subclass.
+        // Hook the concrete runtime class, not only UIApplication itself.
+        UIApplication *app=UIApplication.sharedApplication;
+        Class target=object_getClass(app);
+        SEL selector=@selector(sendEvent:);
+        Method method=class_getInstanceMethod(target,selector);
         char type[8]={0};if(method)method_getReturnType(method,type,sizeof(type));
         if(method && method_getNumberOfArguments(method)==3 && type[0]=='v'){
-            IMP previous=method_setImplementation(method,(IMP)PHKInterceptSendEvent);
+            IMP previous=method_getImplementation(method);
+            BOOL added=class_addMethod(target,selector,(IMP)PHKInterceptSendEvent,method_getTypeEncoding(method));
+            if(!added)previous=method_setImplementation(method,(IMP)PHKInterceptSendEvent);
             if(previous && previous!=(IMP)PHKInterceptSendEvent){
                 PHKOriginalSendEvent=(void (*)(id,SEL,UIEvent*))previous;
                 PHKHookInstalled=YES;
+                NSLog(@"[PHK 3.2] hooked %@ sendEvent:",NSStringFromClass(target));
             }
         }
+        if(!PHKHookInstalled)NSLog(@"[PHK 3.2] warning: failed to hook app event delivery");
     }
     [self suppressOldOrb];[self briefLoadIndicator];
 }
@@ -107,14 +134,7 @@ static void PHKInterceptSendEvent(id object,SEL command,UIEvent *event){
             _openScheduled=YES;
             dispatch_async(dispatch_get_main_queue(), ^{
                 self->_openScheduled=NO;
-                Class coordinatorClass=NSClassFromString(@"PHKMenuCoordinator");
-                SEL shared=NSSelectorFromString(@"shared");
-                if(coordinatorClass && [coordinatorClass respondsToSelector:shared]){
-                    id coordinator=((id(*)(id,SEL))objc_msgSend)(coordinatorClass,shared);
-                    SEL open=NSSelectorFromString(@"open");
-                    if(coordinator && [coordinator respondsToSelector:open])
-                        ((void(*)(id,SEL))objc_msgSend)(coordinator,open);
-                }
+                PHKBridgeOpenMenu();
             });
         }
     }
@@ -125,15 +145,16 @@ static void PHKInterceptSendEvent(id object,SEL command,UIEvent *event){
 }
 @end
 __attribute__((constructor)) static void PHKGestureEngineLoaded(void){
-    NSLog(@"[PHKMenuBridge 3.1] Gesture engine loaded");
+    NSLog(@"[PHKMenuBridge 3.2] Gesture engine loaded");
     dispatch_async(dispatch_get_main_queue(), ^{
         PHKGestureEngine *engine=[PHKGestureEngine shared];
         for(NSString *event in @[UIApplicationDidBecomeActiveNotification,UIWindowDidBecomeVisibleNotification]){
             [NSNotificationCenter.defaultCenter addObserverForName:event object:nil queue:NSOperationQueue.mainQueue
                 usingBlock:^(NSNotification *note){(void)note;[engine install];}];
         }
+        [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidEnterBackgroundNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note){(void)note;[engine resetGesture];}];
         [engine install];
-        for(int i=1;i<=4;i++)
+        for(int i=1;i<=4;i++
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*1.5*NSEC_PER_SEC)),dispatch_get_main_queue(),^{[engine install];});
     });
 }

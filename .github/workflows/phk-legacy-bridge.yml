@@ -27,7 +27,7 @@ jobs:
           mkdir -p output
           xcrun --sdk iphoneos clang++ -std=c++17 -x objective-c++ -arch arm64 \
             -isysroot "$SDK" -miphoneos-version-min=15.1 -O2 -fobjc-arc \
-            -fobjc-exceptions -fvisibility=hidden -dynamiclib \
+            -fobjc-exceptions -fvisibility=hidden -fstack-protector-strong -dynamiclib \
             -install_name '@rpath/PHKMenuBridge.dylib' \
             PHKMenuBridge/Sources/PHKLegacyAdapter.mm \
             PHKMenuBridge/Sources/PHKOverlayController.mm \
@@ -36,6 +36,8 @@ jobs:
             PHKMenuBridge/Core/PHKValidation.cpp \
             PHKMenuBridge/Core/PHKTouchTracker.cpp \
             -framework UIKit -framework Foundation -framework QuartzCore -o output/PHKMenuBridge.dylib
+          xcrun nm -gU output/PHKMenuBridge.dylib | grep -q '_PHKBridgeOpenMenu'
+          xcrun nm -gU output/PHKMenuBridge.dylib | grep -q '_PHKBridgeIsLoaded'
           file output/PHKMenuBridge.dylib
           xcrun vtool -show-build output/PHKMenuBridge.dylib || true
       - name: Build resource bundle
