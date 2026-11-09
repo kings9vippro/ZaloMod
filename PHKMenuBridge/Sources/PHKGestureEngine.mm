@@ -20,7 +20,7 @@ static void PHKInterceptSendEvent(id object,SEL command,UIEvent *event){
         [[PHKGestureEngine shared] consumeEvent:event];
 }
 @implementation PHKGestureEngine {
-    phk::FourFingerTap _state;
+    phk::ThreeFingerTap _state;
     BOOL _openScheduled;
 }
 + (instancetype)shared {
@@ -53,7 +53,7 @@ static void PHKInterceptSendEvent(id object,SEL command,UIEvent *event){
     if(PHKBadgeDisplayed || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
     UIWindow *window=[self foregroundWindow];if(!window)return;
     PHKBadgeDisplayed=YES;
-    UILabel *badge=[UILabel new];badge.text=@"PHK MENU 3.0  ·  CHẠM 4 NGÓN";
+    UILabel *badge=[UILabel new];badge.text=@"PHK MENU 3.1  ·  CHẠM 3 NGÓN";
     badge.textAlignment=NSTextAlignmentCenter;
     badge.font=[UIFont systemFontOfSize:11 weight:UIFontWeightSemibold];
     badge.textColor=UIColor.whiteColor;
@@ -125,7 +125,7 @@ static void PHKInterceptSendEvent(id object,SEL command,UIEvent *event){
 }
 @end
 __attribute__((constructor)) static void PHKGestureEngineLoaded(void){
-    NSLog(@"[PHKMenuBridge 3.0] Gesture engine loaded");
+    NSLog(@"[PHKMenuBridge 3.1] Gesture engine loaded");
     dispatch_async(dispatch_get_main_queue(), ^{
         PHKGestureEngine *engine=[PHKGestureEngine shared];
         for(NSString *event in @[UIApplicationDidBecomeActiveNotification,UIWindowDidBecomeVisibleNotification]){

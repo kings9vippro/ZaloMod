@@ -2,10 +2,10 @@
 #include <algorithm>
 #include <cmath>
 namespace phk {
-void FourFingerTap::reset() noexcept {
+void ThreeFingerTap::reset() noexcept {
     active_.clear(); first_ = -1.0; maxActive_ = 0; invalid_ = false;
 }
-bool FourFingerTap::feed(std::uintptr_t identifier, TouchPhase phase, double timestamp, float x, float y) noexcept {
+bool ThreeFingerTap::feed(std::uintptr_t identifier, TouchPhase phase, double timestamp, float x, float y) noexcept {
     if(identifier==0 || !std::isfinite(timestamp) || !std::isfinite(x) || !std::isfinite(y)) {
         invalid_=true;return false;
     }
@@ -14,7 +14,7 @@ bool FourFingerTap::feed(std::uintptr_t identifier, TouchPhase phase, double tim
         auto inserted=active_.emplace(identifier,TouchPoint{timestamp,x,y});
         if(!inserted.second){invalid_=true;return false;}
         maxActive_=std::max(maxActive_,static_cast<unsigned>(active_.size()));
-        if(maxActive_>4 || (first_>=0 && timestamp-first_>.35))invalid_=true;
+        if(maxActive_>3 || (first_>=0 && timestamp-first_>.35))invalid_=true;
         return false;
     }
     auto it=active_.find(identifier);
@@ -25,7 +25,7 @@ bool FourFingerTap::feed(std::uintptr_t identifier, TouchPhase phase, double tim
     if(phase==TouchPhase::ended || phase==TouchPhase::cancelled){
         active_.erase(it);
         if(active_.empty()){
-            bool detected=!invalid_ && maxActive_==4 && timestamp>=first_ && timestamp-first_<=.80;
+            bool detected=!invalid_ && maxActive_==3 && timestamp>=first_ && timestamp-first_<=.80;
             reset();return detected;
         }
     }

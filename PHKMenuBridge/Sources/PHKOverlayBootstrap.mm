@@ -13,9 +13,9 @@
 - (void)close;
 @end
 
-@interface PHKFourFingerRecognizer : UITapGestureRecognizer
+@interface PHKThreeFingerRecognizer : UITapGestureRecognizer
 @end
-@implementation PHKFourFingerRecognizer
+@implementation PHKThreeFingerRecognizer
 @end
 
 static void PHKNoFloatingShow(id self,SEL command){(void)self;(void)command;}
@@ -52,13 +52,13 @@ static UIViewController *PHKTopController(UIViewController *base){
 }
 - (void)attachToWindow:(UIWindow *)window {
     if(!window||window==self.overlayWindow||window.hidden||window.windowLevel!=UIWindowLevelNormal)return;
-    for(UIGestureRecognizer *g in window.gestureRecognizers){if([g isKindOfClass:[PHKFourFingerRecognizer class]])return;}
-    PHKFourFingerRecognizer *tap=[[PHKFourFingerRecognizer alloc]initWithTarget:self action:@selector(fourFingerTapped:)];
-    tap.numberOfTouchesRequired=4;tap.numberOfTapsRequired=1;
+    for(UIGestureRecognizer *g in window.gestureRecognizers){if([g isKindOfClass:[PHKThreeFingerRecognizer class]])return;}
+    PHKThreeFingerRecognizer *tap=[[PHKThreeFingerRecognizer alloc]initWithTarget:self action:@selector(threeFingerTapped:)];
+    tap.numberOfTouchesRequired=3;tap.numberOfTapsRequired=1;
     tap.cancelsTouchesInView=NO;tap.delaysTouchesBegan=NO;tap.delaysTouchesEnded=NO;
     [window addGestureRecognizer:tap];
 }
-- (void)fourFingerTapped:(UIGestureRecognizer *)gesture {
+- (void)threeFingerTapped:(UIGestureRecognizer *)gesture {
     if(gesture.state==UIGestureRecognizerStateRecognized)[self open];
 }
 - (UIWindow *)appWindow {

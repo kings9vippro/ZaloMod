@@ -4,7 +4,7 @@
 namespace phk {
 enum class TouchPhase : unsigned char { began, moved, ended, cancelled };
 struct TouchPoint { double timestamp; float x; float y; };
-class FourFingerTap final {
+class ThreeFingerTap final {
 public:
     bool feed(std::uintptr_t identifier, TouchPhase phase, double timestamp, float x, float y) noexcept;
     void reset() noexcept;
