@@ -29,3 +29,9 @@ Run the repository workflow \`Build PHK Independent Dylib\` on a macOS runner. I
 | Signed installable IPA | Requires an owned app and valid signing identity/provisioning profile |
 
 Do not replace the old dylib in a working app on the assumption that these private features have been reimplemented. Use a test host and runtime logs before distribution.
+
+## Independent host IPA smoke test
+
+The workflow also builds `PHKStandaloneHost-UNSIGNED.ipa`, a **first-party diagnostic app** with a native UIKit scene lifecycle. Its executable links `@rpath/PHKStandalone.dylib` explicitly and the IPA includes the compiled dylib inside Frameworks. This verifies loader linkage and archive integrity at build time; it is not a Zalo IPA and cannot exercise third-party messenger functionality.
+
+After signing this test host with a legitimate Apple developer profile, run it on an iPhone. The host displays the native dylib version and a button to call `PHKStandaloneOpen()`, allowing the menu rendering to be tested separately from the three-finger gesture.
