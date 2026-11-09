@@ -64,6 +64,33 @@ jobs:
           name: PHKStandaloneHost-unsigned-ipa
           path: build-standalone/PHKStandaloneHost-UNSIGNED.ipa
           if-no-files-found: error
+      - name: Build first-party smoke-test host (unsigned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          APP=build-standalone/Payload/PHKHost.app
+          mkdir -p "$APP/Frameworks"
+          cp build-standalone/PHKStandalone.dylib "$APP/Frameworks/"
+          cp PHKStandaloneKit/Host/Info.plist "$APP/Info.plist"
+          xcrun --sdk iphoneos clang++ -std=c++17 -arch arm64 -x objective-c++ \
+            -isysroot "$SDK" -miphoneos-version-min=15.1 -O2 -fobjc-arc -fobjc-exceptions \
+            -fstack-protector-strong -Wl,-rpath,@executable_path/Frameworks \
+            -Lbuild-standalone PHKStandaloneKit/Host/main.mm -lPHKStandalone \
+            -framework UIKit -framework Foundation -framework QuartzCore \
+            -o "$APP/PHKHost"
+          cd build-standalone
+          zip -X -q -r PHK-Standalone-UNSIGNED.ipa Payload
+          cd ..
+          python3 PHKStandaloneKit/Tools/validate_host_ipa.py build-standalone/PHK-Standalone-UNSIGNED.ipa \
+            | tee build-standalone/host-validation.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PHKStandalone-test-ipa-unsigned
+          path: |
+            build-standalone/PHK-Standalone-UNSIGNED.ipa
+            build-standalone/host-validation.json
+          if-no-files-found: error
       - name: Upload standalone dylib
         uses: actions/upload-artifact@v4
         with:
