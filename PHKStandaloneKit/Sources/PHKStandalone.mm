@@ -237,7 +237,7 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
     self.priorKeyWindow=host;
     UIWindow *panel=[[UIWindow alloc]initWithWindowScene:host.windowScene];
     panel.windowLevel=UIWindowLevelAlert-3;
-    __weak typeof(self) weakSelf=self;
+    __weak PHKStandaloneCoordinator *weakSelf=self;
     PHKStandalonePanel *controller=[PHKStandalonePanel new];
     controller.onClose=^{[weakSelf dismiss];};
     panel.rootViewController=controller;self.panelWindow=panel;
