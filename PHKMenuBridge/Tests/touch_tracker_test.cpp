@@ -14,7 +14,7 @@ static bool stroke(ThreeFingerTap& t,unsigned n,double delay=0,double extra=0,bo
 int main(){
     ThreeFingerTap t;
     assert(stroke(t,3));assert(stroke(t,3));
-    assert(!stroke(t,2));assert(!stroke(t,3));
+    assert(!stroke(t,2));assert(!stroke(t,4));
     assert(!stroke(t,3,0,2));assert(!stroke(t,3,0,0,true));
     for(unsigned i=0;i<3;i++)t.feed(i+1,TouchPhase::began,10+i*.01,i*10,20);
     assert(!t.feed(1,TouchPhase::moved,10.1,100,20));
