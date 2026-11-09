@@ -1,0 +1,46 @@
+name: Build PHK Independent Dylib
+on:
+  push:
+    paths:
+      - 'PHKStandaloneKit/**'
+      - '.github/workflows/phk-standalone.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  standalone:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test C++17 core
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Werror PHKStandaloneKit/Core/Preferences.cpp PHKStandaloneKit/Tests/preferences_test.cpp -o /tmp/phk-standalone-tests
+          /tmp/phk-standalone-tests
+      - name: Build arm64 iOS standalone library
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p build-standalone
+          xcrun --sdk iphoneos clang++ -std=c++17 -arch arm64 -x objective-c++ \
+            -isysroot "$SDK" -miphoneos-version-min=15.1 -O2 -fobjc-arc \
+            -fobjc-exceptions -fvisibility=hidden -fstack-protector-strong -dynamiclib \
+            -install_name '@rpath/PHKStandalone.dylib' \
+            -Wl,-sectcreate,__DATA,__phkcar,PHKMenuBridge/Resources/AdminCar.jpg \
+            -Wl,-sectcreate,__DATA,__phkwall,PHKMenuBridge/Resources/MenuWallpaper.jpg \
+            PHKStandaloneKit/Sources/PHKStandalone.mm \
+            PHKStandaloneKit/Core/Preferences.cpp \
+            -framework Foundation -framework UIKit -framework QuartzCore \
+            -o build-standalone/PHKStandalone.dylib
+          xcrun nm -gU build-standalone/PHKStandalone.dylib | grep -q _PHKStandaloneVersion
+          xcrun nm -gU build-standalone/PHKStandalone.dylib | grep -q _PHKStandaloneOpen
+          xcrun otool -l build-standalone/PHKStandalone.dylib | grep -q '__phkcar'
+          xcrun otool -l build-standalone/PHKStandalone.dylib | grep -q '__phkwall'
+          file build-standalone/PHKStandalone.dylib
+      - name: Upload standalone dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: PHKStandalone-arm64-dylib
+          path: build-standalone/PHKStandalone.dylib
+          if-no-files-found: error
