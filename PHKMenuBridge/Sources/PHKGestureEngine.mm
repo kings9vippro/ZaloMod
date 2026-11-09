@@ -154,7 +154,7 @@ __attribute__((constructor)) static void PHKGestureEngineLoaded(void){
         }
         [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidEnterBackgroundNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note){(void)note;[engine resetGesture];}];
         [engine install];
-        for(int i=1;i<=4;i++
+        for(int i=1;i<=4;i++)
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*1.5*NSEC_PER_SEC)),dispatch_get_main_queue(),^{[engine install];});
     });
 }
