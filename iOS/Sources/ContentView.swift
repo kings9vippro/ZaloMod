@@ -32,7 +32,7 @@ struct ContentView: View {
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .tracking(3)
                         .foregroundStyle(.white.opacity(0.85))
-                    Text("Chạm bốn ngón tay để mở bảng điều khiển")
+                    Text("Chạm ba ngón tay để mở bảng điều khiển")
                         .font(.footnote)
                         .foregroundStyle(.white.opacity(0.72))
                         .multilineTextAlignment(.center)
@@ -52,7 +52,7 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Palette.canvas)
-            .background(FourFingerTapCapture {
+            .background(ThreeFingerTapCapture {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.88)) { menuVisible.toggle() }
             }.frame(width: 1, height: 1))
         }
@@ -206,7 +206,7 @@ private struct PanelView: View {
     private var toolSettings: some View {
         VStack(spacing: 10) {
             sectionTitle("CÔNG CỤ & BẢO MẬT", symbol: "wrench.and.screwdriver")
-            infoCard("Mở menu", value: "Chạm bốn ngón tay", symbol: "hand.tap")
+            infoCard("Mở menu", value: "Chạm ba ngón tay", symbol: "hand.tap")
             infoCard("Thông tin phiên", value: "Không truy cập cookie", symbol: "lock.shield")
             infoCard("Chế độ hoạt động", value: "Bản xem trước", symbol: "checkmark.shield")
             Text("Không nhúng token, không lưu mật khẩu và không can thiệp vào ứng dụng bên thứ ba.")

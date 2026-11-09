@@ -46,3 +46,10 @@ To install on an actual iPhone, you must use an Apple Development/Distribution c
 ## Rights
 
 The code in this repository is original, released under MIT. Apple, Zalo, and other names and trademarks remain the property of their respective owners. The user-provided photos are excluded from this license and should be distributed only with the owner's authorization.
+
+
+## PHK Standalone / original first-party UI build
+
+The PHKControl iOS sample uses a three-finger gesture and is a first-party UI demonstrator; it is not Zalo and does not reproduce ZaloModVIP. Version 1.1.0 ships as an unsigned IPA artifact until you export it using a certificate and provisioning profile for your Apple development team. The separate `PHKStandaloneKit/` module builds a single self-contained dylib with two embedded images. Its local UI controls do not provide third-party messenger hooks.
+
+See `docs/IOS-SIGNING-AND-TESTING.md` for the device-testing procedure.

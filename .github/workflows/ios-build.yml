@@ -32,6 +32,12 @@ jobs:
           mkdir -p out/Payload
           cp -R build-device/Build/Products/Release-iphoneos/PHKControl.app out/Payload/
           cd out && zip -qr PHKControl-UNSIGNED.ipa Payload
+      - name: Validate unsigned IPA structure
+        shell: bash
+        run: |
+          unzip -tq out/PHKControl-UNSIGNED.ipa
+          unzip -Z1 out/PHKControl-UNSIGNED.ipa | grep -q 'Payload/PHKControl.app/Info.plist'
+          xcrun --sdk iphoneos lipo -info build-device/Build/Products/Release-iphoneos/PHKControl.app/PHKControl | grep -q arm64
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
