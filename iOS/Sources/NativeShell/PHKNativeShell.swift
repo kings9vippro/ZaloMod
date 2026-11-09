@@ -123,8 +123,10 @@ private struct LiquidTabBar: View {
                 .onEnded { value in
                     guard abs(value.translation.width) > 43,
                           abs(value.translation.width) > abs(value.translation.height) else { return }
-                    let delta = value.translation.width < 0 ? 1 : -1
-                    let next = min(max(selection.rawValue + delta, 0), ShellTab.allCases.count - 1)
+                    let next = PHKCore.nextTabIndex(
+                        withCurrent: selection.rawValue,
+                        count: ShellTab.allCases.count,
+                        dragPoints: Double(value.translation.width))
                     guard let tab = ShellTab(rawValue: next) else { return }
                     choose(tab)
                 }

@@ -18,7 +18,7 @@ jobs:
         run: xcodegen generate --spec project.yml
       - name: Verify C++ core
         run: |
-          clang++ -std=c++17 Core/Settings.cpp Core/tests/settings_test.cpp -o /tmp/phk_core_tests
+          clang++ -std=c++17 -Wall -Wextra -Werror -pedantic Core/Settings.cpp Core/tests/settings_test.cpp -o /tmp/phk_core_tests
           /tmp/phk_core_tests
       - name: Build iOS simulator app (unsigned)
         run: |
@@ -38,6 +38,15 @@ jobs:
           unzip -tq out/PHKControl-UNSIGNED.ipa
           unzip -Z1 out/PHKControl-UNSIGNED.ipa | grep -q 'Payload/PHKControl.app/Info.plist'
           xcrun --sdk iphoneos lipo -info build-device/Build/Products/Release-iphoneos/PHKControl.app/PHKControl | grep -q arm64
+          if unzip -Z1 out/PHKControl-UNSIGNED.ipa | grep -Fq 'PHKStandalone.dylib'; then
+            echo 'ERROR: Independent native IPA should not package the injected standalone dylib.' >&2
+            exit 1
+          fi
+          if xcrun otool -L build-device/Build/Products/Release-iphoneos/PHKControl.app/PHKControl | grep -Fq 'PHKStandalone.dylib'; then
+            echo 'ERROR: Native application unexpectedly links a tweak dylib.' >&2
+            exit 1
+          fi
+          echo 'Verified: native iOS app binary; no PHKStandalone dylib dependency.'
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
