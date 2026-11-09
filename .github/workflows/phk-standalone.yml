@@ -52,7 +52,7 @@ jobs:
             -isysroot "$SDK" -miphoneos-version-min=15.1 -O2 -fobjc-arc \
             -Wl,-rpath,@executable_path/Frameworks \
             PHKStandaloneKit/Host/HostApp.mm \
-            -Lbuild-standalone -lPHKStandalone \
+            build-standalone/PHKStandalone.dylib \
             -framework UIKit -framework Foundation \
             -o "$APP/PHKStandaloneHost"
           xcrun otool -L "$APP/PHKStandaloneHost" | grep -q "@rpath/PHKStandalone.dylib"
