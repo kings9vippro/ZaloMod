@@ -19,22 +19,51 @@ static UIImage *PHKEmbeddedImage(const char *section) {
     if(!bytes || size<8)return nil;
     return [UIImage imageWithData:[NSData dataWithBytesNoCopy:(void *)bytes length:size freeWhenDone:NO]];
 }
-static BOOL PHKReadSetting(NSString *name,BOOL fallback) {
+static NSMutableDictionary<NSString *,NSNumber *> *PHKSessionSettings(void) {
+    static NSMutableDictionary *settings;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{settings=[NSMutableDictionary new];});
+    return settings;
+}
+static NSString *PHKStorageKey(NSString *name) {
+    return [PHKPrefix stringByAppendingString:name];
+}
+static BOOL PHKReadSetting(NSString *name, BOOL fallback) {
+    NSNumber *active=PHKSessionSettings()[name];
+    if(active)return active.boolValue;
     NSUserDefaults *store=NSUserDefaults.standardUserDefaults;
-    NSString *key=[PHKPrefix stringByAppendingString:name];
+    NSString *key=PHKStorageKey(name);
     return [store objectForKey:key] ? [store boolForKey:key] : fallback;
 }
 static void PHKWriteSetting(NSString *name,BOOL value) {
     NSUserDefaults *store=NSUserDefaults.standardUserDefaults;
-    NSString *target=[PHKPrefix stringByAppendingString:name];
-    if([name isEqualToString:@"rememberSettings"] && !value) {
+    NSMutableDictionary<NSString *,NSNumber *> *session=PHKSessionSettings();
+    NSString *target=PHKStorageKey(name);
+    BOOL isRemember=[name isEqualToString:@"rememberSettings"];
+    if(isRemember && !value){
+        // Keep the current visible settings active until the app restarts,
+        // but clear persisted choices in the preferences domain.
         for(const auto &entry:phk::kDefinitions){
             NSString *key=[NSString stringWithUTF8String:entry.key];
-            if(![key isEqualToString:@"rememberSettings"])
-                [store removeObjectForKey:[PHKPrefix stringByAppendingString:key]];
+            if([key isEqualToString:@"rememberSettings"])continue;
+            if(!session[key])session[key]=@(PHKReadSetting(key,entry.defaultValue));
+            [store removeObjectForKey:PHKStorageKey(key)];
         }
     }
-    if(![name isEqualToString:@"rememberSettings"] && !PHKReadSetting(@"rememberSettings",YES)) {
+    session[name]=@(value);
+    if(isRemember){
+        [store setBool:value forKey:target];
+        if(value){
+            for(const auto &entry:phk::kDefinitions){
+                NSString *key=[NSString stringWithUTF8String:entry.key];
+                if([key isEqualToString:@"rememberSettings"])continue;
+                NSNumber *setting=session[key];
+                if(setting)[store setBool:setting.boolValue forKey:PHKStorageKey(key)];
+            }
+        }
+        return;
+    }
+    if(!PHKReadSetting(@"rememberSettings",YES)){
         [store removeObjectForKey:target];
         return;
     }
