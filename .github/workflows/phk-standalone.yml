@@ -50,7 +50,8 @@ jobs:
           xcrun --sdk iphoneos clang++ -std=c++17 -arch arm64 -x objective-c++ \
             -isysroot "$SDK" -miphoneos-version-min=15.1 -O2 -fobjc-arc -fobjc-exceptions \
             -fstack-protector-strong -Wl,-rpath,@executable_path/Frameworks \
-            -Lbuild-standalone PHKStandaloneKit/Host/main.mm -lPHKStandalone \
+            PHKStandaloneKit/Host/main.mm \
+            -x none build-standalone/PHKStandalone.dylib \
             -framework UIKit -framework Foundation -framework QuartzCore \
             -o "$APP/PHKHost"
           cd build-standalone
