@@ -25,7 +25,20 @@ static BOOL PHKReadSetting(NSString *name,BOOL fallback) {
     return [store objectForKey:key] ? [store boolForKey:key] : fallback;
 }
 static void PHKWriteSetting(NSString *name,BOOL value) {
-    [NSUserDefaults.standardUserDefaults setBool:value forKey:[PHKPrefix stringByAppendingString:name]];
+    NSUserDefaults *store=NSUserDefaults.standardUserDefaults;
+    NSString *target=[PHKPrefix stringByAppendingString:name];
+    if([name isEqualToString:@"rememberSettings"] && !value) {
+        for(const auto &entry:phk::kDefinitions){
+            NSString *key=[NSString stringWithUTF8String:entry.key];
+            if(![key isEqualToString:@"rememberSettings"])
+                [store removeObjectForKey:[PHKPrefix stringByAppendingString:key]];
+        }
+    }
+    if(![name isEqualToString:@"rememberSettings"] && !PHKReadSetting(@"rememberSettings",YES)) {
+        [store removeObjectForKey:target];
+        return;
+    }
+    [store setBool:value forKey:target];
 }
 @interface PHKStandalonePanel : UIViewController
 @property(nonatomic,copy) dispatch_block_t onClose;
@@ -34,6 +47,7 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
     UIScrollView *_scroll;
     UIStackView *_cards;
     UILabel *_modeLabel;
+    UIView *_veil;
 }
 - (UILabel *)label:(NSString *)text size:(CGFloat)size weight:(UIFontWeight)weight color:(UIColor *)color {
     UILabel *label=[UILabel new];label.text=text;label.font=[UIFont systemFontOfSize:size weight:weight];
@@ -73,7 +87,7 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
             [background.trailingAnchor constraintEqualToAnchor:sheet.trailingAnchor]
         ]];
         UIView *veil=[UIView new];veil.backgroundColor=[UIColor colorWithRed:.02 green:.035 blue:.066 alpha:.82];
-        veil.translatesAutoresizingMaskIntoConstraints=NO;[sheet addSubview:veil];
+        veil.translatesAutoresizingMaskIntoConstraints=NO;[sheet addSubview:veil];_veil=veil;
         [NSLayoutConstraint activateConstraints:@[
             [veil.topAnchor constraintEqualToAnchor:sheet.topAnchor],
             [veil.bottomAnchor constraintEqualToAnchor:sheet.bottomAnchor],
@@ -132,7 +146,7 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
     [_cards addArrangedSubview:caption];
     for(const auto &item:phk::kDefinitions)[self makeSetting:item];
     UILabel *heading2=[self label:@"Chẩn đoán" size:19 weight:UIFontWeightBold color:UIColor.whiteColor];[_cards addArrangedSubview:heading2];
-    UIView *diagnostics=[UIView new];[self addCard:diagnostics height:122];
+    UIView *diagnostics=[UIView new];[self addCard:diagnostics height:155];
     UIStackView *status=[UIStackView new];status.axis=UILayoutConstraintAxisVertical;status.spacing=8;
     status.translatesAutoresizingMaskIntoConstraints=NO;[diagnostics addSubview:status];
     [NSLayoutConstraint activateConstraints:@[
@@ -141,11 +155,37 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
         [status.topAnchor constraintEqualToAnchor:diagnostics.topAnchor constant:14],
         [status.bottomAnchor constraintEqualToAnchor:diagnostics.bottomAnchor constant:-14]
     ]];
-    [status addArrangedSubview:[self label:@"Dylib ARM64 · v1.0.0 · Đã nạp" size:13 weight:UIFontWeightSemibold color:PHKAccent()]];
+    [status addArrangedSubview:[self label:@"Dylib ARM64 · v1.1.0 · Đã nạp" size:13 weight:UIFontWeightSemibold color:PHKAccent()]];
+    _modeLabel=[self label:@"" size:12 weight:UIFontWeightMedium color:PHKAccent()];
+    [status addArrangedSubview:_modeLabel];
     [status addArrangedSubview:[self label:@"Cử chỉ: chạm đồng thời ba ngón. Cài đặt chỉ tác động lên giao diện PHK, không thay thế hook của Zalo." size:12 weight:UIFontWeightRegular color:[UIColor colorWithWhite:1 alpha:.75]]];
     UILabel *fine=[self label:@"Không xuất cookie, không thu thập thông tin đăng nhập, không giả trạng thái xử lý máy chủ." size:10 weight:UIFontWeightRegular color:[UIColor colorWithWhite:1 alpha:.55]];
     [_cards addArrangedSubview:fine];
+    [self applyPreferences];
 }
+- (void)applyPreferences {
+    BOOL smart=PHKReadSetting(@"smartMode",YES);
+    BOOL compact=PHKReadSetting(@"compactLayout",NO);
+    BOOL lowPower=NSProcessInfo.processInfo.lowPowerModeEnabled;
+    BOOL reduceMotion=UIAccessibilityIsReduceMotionEnabled() || PHKReadSetting(@"reducedMotion",NO);
+    if(_cards)_cards.spacing=(compact || (smart && lowPower))?6:10;
+    if(_veil)_veil.alpha=PHKReadSetting(@"softBackground",YES)?1.0:.72;
+    if(_modeLabel)_modeLabel.text=[NSString stringWithFormat:@"Tối ưu: %@ · Pin: %@ · Chuyển động: %@",
+         smart?@"Tự động":@"Thủ công",lowPower?@"Tiết kiệm":@"Bình thường",reduceMotion?@"Giảm":@"Chuẩn"];
+}
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(environmentChanged:)
+        name:NSProcessInfoPowerStateDidChangeNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(environmentChanged:)
+        name:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+    [self applyPreferences];
+}
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    [NSNotificationCenter.defaultCenter removeObserver:self];
+}
+- (void)environmentChanged:(NSNotification *)notification {(void)notification;[self applyPreferences];}
 - (void)makeSetting:(const phk::Definition &)item {
     UIView *card=[UIView new];[self addCard:card height:66];
     UILabel *label=[self label:[NSString stringWithUTF8String:item.title] size:14 weight:UIFontWeightSemibold color:UIColor.whiteColor];
@@ -169,7 +209,9 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
     NSString *key=objc_getAssociatedObject(sender,@selector(toggled:));
     if(!phk::find(key.UTF8String))return;
     PHKWriteSetting(key,sender.on);
-    if([key isEqualToString:@"haptics"] && sender.on){
+    [self applyPreferences];
+    if([key isEqualToString:@"haptics"] && sender.on &&
+       !(PHKReadSetting(@"smartMode",YES) && NSProcessInfo.processInfo.lowPowerModeEnabled)){
         UIImpactFeedbackGenerator *gen=[[UIImpactFeedbackGenerator alloc]initWithStyle:UIImpactFeedbackStyleLight];
         [gen impactOccurred];
     }
@@ -250,7 +292,7 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
     [self.priorKeyWindow makeKeyWindow];self.priorKeyWindow=nil;
 }
 @end
-extern "C" __attribute__((visibility("default"))) const char *PHKStandaloneVersion(void){return "1.0.0";}
+extern "C" __attribute__((visibility("default"))) const char *PHKStandaloneVersion(void){return "1.1.0";}
 extern "C" __attribute__((visibility("default"))) bool PHKStandaloneLoaded(void){return true;}
 extern "C" __attribute__((visibility("default"))) void PHKStandaloneOpen(void) {
     dispatch_async(dispatch_get_main_queue(), ^{[[PHKStandaloneCoordinator shared] show];});

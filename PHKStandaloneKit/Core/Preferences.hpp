@@ -6,11 +6,12 @@
 
 namespace phk {
 enum class Setting : std::uint8_t {
-    haptics = 0, reducedMotion, compactLayout, softBackground, rememberSettings, count
+    haptics = 0, smartMode, reducedMotion, compactLayout, softBackground, rememberSettings, count
 };
 struct Definition { Setting id; const char *key; const char *title; bool defaultValue; };
-constexpr std::array<Definition,5> kDefinitions{{
+constexpr std::array<Definition,6> kDefinitions{{
     {Setting::haptics, "haptics", "Phản hồi rung", true},
+    {Setting::smartMode, "smartMode", "Tối ưu thông minh", true},
     {Setting::reducedMotion, "reducedMotion", "Giảm chuyển động", false},
     {Setting::compactLayout, "compactLayout", "Bố cục gọn", false},
     {Setting::softBackground, "softBackground", "Nền dịu mắt", true},

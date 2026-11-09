@@ -1,4 +1,4 @@
-# PHK Standalone Kit 1.0 — Developer Phan Anh Khôi
+# PHK Standalone Kit 1.1 — Developer Phan Anh Khôi
 
 This is **original, standalone source** for a single ARM64 iOS dynamic library. It provides a dark-glass settings panel, a passive 3-finger tap gesture, persistent local preferences, and diagnostic exported functions. User-provided car avatar and monochrome wallpaper are embedded directly into **one .dylib** using Mach-O data sections.
 
@@ -35,3 +35,11 @@ Do not replace the old dylib in a working app on the assumption that these priva
 The workflow also builds `PHKStandaloneHost-UNSIGNED.ipa`, a **first-party diagnostic app** with a native UIKit scene lifecycle. Its executable links `@rpath/PHKStandalone.dylib` explicitly and the IPA includes the compiled dylib inside Frameworks. This verifies loader linkage and archive integrity at build time; it is not a Zalo IPA and cannot exercise third-party messenger functionality.
 
 After signing this test host with a legitimate Apple developer profile, run it on an iPhone. The host displays the native dylib version and a button to call `PHKStandaloneOpen()`, allowing the menu rendering to be tested separately from the three-finger gesture.
+
+## v1.1: settings with observable effects
+
+- **Smart mode** adjusts card density in Low Power Mode and disables optional haptic feedback when power saving is active.
+- **Compact layout** changes actual card spacing; **soft background** changes opacity of the photograph overlay.
+- **Reduced motion** reports the effective iOS accessibility preference and user setting.
+- **Remember settings** controls persistence of local preferences and clears stored switches when turned off.
+- Updates adapt to Low Power Mode and Reduce Motion notifications. These are local presentation settings only, not private messenger functions.

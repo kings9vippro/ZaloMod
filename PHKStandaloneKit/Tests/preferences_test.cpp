@@ -3,7 +3,7 @@
 #include <cstdio>
 int main() {
     using namespace phk;
-    assert(kDefinitions.size()==5);
+    assert(kDefinitions.size()==6);
     for (const auto &d:kDefinitions) {
         assert(find(d.key)==&d);
         assert(d.title && d.title[0]);
