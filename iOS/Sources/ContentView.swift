@@ -1,12 +1,32 @@
 import SwiftUI
 
+// The interface is part of the app target. It is not loaded from a tweak dylib.
+struct ContentView: View {
+    @State private var showSettings = false
+
+    var body: some View {
+        PHKNativeShell(onOpenSettings: { showSettings = true })
+            .background {
+                ThreeFingerTapCapture { showSettings = true }
+                    .frame(width: 1, height: 1)
+            }
+            .sheet(isPresented: $showSettings) {
+                PanelView(close: { showSettings = false })
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 16)
+                    .background(Color(red: 0.045, green: 0.063, blue: 0.10))
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+    }
+}
+
 private enum Palette {
     static let canvas = Color(red: 0.045, green: 0.063, blue: 0.10)
     static let accent = Color(red: 0.26, green: 0.83, blue: 0.96)
     static let surface = Color.white.opacity(0.105)
     static let secondary = Color.white.opacity(0.68)
 }
-
 enum PanelSection: String, CaseIterable, Identifiable {
     case messages = "Tin nhắn", appearance = "Giao diện", groups = "Nhóm", tools = "Công cụ"
     var id: Self { self }
@@ -16,61 +36,6 @@ enum PanelSection: String, CaseIterable, Identifiable {
         case .appearance: return "paintbrush.pointed.fill"
         case .groups: return "person.2.fill"
         case .tools: return "slider.horizontal.3"
-        }
-    }
-}
-
-struct ContentView: View {
-    @State private var menuVisible = false
-    var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                wallpaper
-                VStack(spacing: 14) {
-                    Spacer()
-                    Text("DEVELOPER PHAN ANH KHÔI")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .tracking(3)
-                        .foregroundStyle(.white.opacity(0.85))
-                    Text("Chạm ba ngón tay để mở bảng điều khiển")
-                        .font(.footnote)
-                        .foregroundStyle(.white.opacity(0.72))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                }
-                .padding(.bottom, 46)
-                if menuVisible {
-                    Color.black.opacity(0.42)
-                        .ignoresSafeArea()
-                        .onTapGesture { withAnimation(.spring(response: 0.35)) { menuVisible = false } }
-                    PanelView(close: { withAnimation(.spring(response: 0.35)) { menuVisible = false } })
-                        .frame(maxWidth: 520)
-                        .frame(height: min(geo.size.height * 0.84, 760))
-                        .padding(.horizontal, 16)
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Palette.canvas)
-            .background(ThreeFingerTapCapture {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.88)) { menuVisible.toggle() }
-            }.frame(width: 1, height: 1))
-        }
-        .preferredColorScheme(.dark)
-    }
-    private var wallpaper: some View {
-        GeometryReader { geo in
-            Group {
-                if UIImage(named: "MenuWallpaper") != nil {
-                    Image("MenuWallpaper").resizable().scaledToFill()
-                } else {
-                    LinearGradient(colors: [.black, Palette.canvas, .gray.opacity(0.3)], startPoint: .top, endPoint: .bottom)
-                }
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .clipped()
-            .overlay(LinearGradient(colors: [.black.opacity(0.18), .clear, .black.opacity(0.60)], startPoint: .top, endPoint: .bottom))
-            .ignoresSafeArea()
         }
     }
 }
