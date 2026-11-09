@@ -50,12 +50,14 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
     UIView *root=[UIView new];root.backgroundColor=[UIColor colorWithRed:.015 green:.027 blue:.05 alpha:.72];self.view=root;
     UIView *sheet=[UIView new];sheet.backgroundColor=PHKGraphite();sheet.layer.cornerRadius=26;
     sheet.layer.masksToBounds=YES;sheet.translatesAutoresizingMaskIntoConstraints=NO;[root addSubview:sheet];
+    NSLayoutConstraint *idealWidth=[sheet.widthAnchor constraintEqualToAnchor:root.widthAnchor constant:-24];
+    idealWidth.priority=UILayoutPriorityDefaultHigh;
     [NSLayoutConstraint activateConstraints:@[
+        idealWidth,
         [sheet.centerXAnchor constraintEqualToAnchor:root.centerXAnchor],
         [sheet.centerYAnchor constraintEqualToAnchor:root.safeAreaLayoutGuide.centerYAnchor],
         [sheet.leadingAnchor constraintGreaterThanOrEqualToAnchor:root.leadingAnchor constant:12],
         [sheet.trailingAnchor constraintLessThanOrEqualToAnchor:root.trailingAnchor constant:-12],
-        [sheet.widthAnchor constraintEqualToAnchor:root.widthAnchor constant:-24],
         [sheet.widthAnchor constraintLessThanOrEqualToConstant:460],
         [sheet.heightAnchor constraintLessThanOrEqualToAnchor:root.safeAreaLayoutGuide.heightAnchor multiplier:.91],
         [sheet.heightAnchor constraintEqualToAnchor:root.safeAreaLayoutGuide.heightAnchor multiplier:.81]
@@ -167,7 +169,7 @@ static void PHKWriteSetting(NSString *name,BOOL value) {
     NSString *key=objc_getAssociatedObject(sender,@selector(toggled:));
     if(!phk::find(key.UTF8String))return;
     PHKWriteSetting(key,sender.on);
-    if([key isEqualToString:@"haptics"] && sender.on && @available(iOS 10.0,*)){
+    if([key isEqualToString:@"haptics"] && sender.on){
         UIImpactFeedbackGenerator *gen=[[UIImpactFeedbackGenerator alloc]initWithStyle:UIImpactFeedbackStyleLight];
         [gen impactOccurred];
     }
