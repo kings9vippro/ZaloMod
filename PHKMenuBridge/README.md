@@ -71,3 +71,8 @@ See `docs/LEGACY-COVERAGE.md` and `docs/inventory.json` for the static method in
 - Added stack protector and CI checks that the diagnostics appear among exported symbols.
 
 **IMPORTANT:** This project remains a menu/adapter companion. It cannot replace the original hooks, session features, or ZaloModVIP.dylib. There is no verified safe single-dylib parity; binary offsets are version-specific and are not used as a substitute for source code.
+
+## IPA injection diagnosis
+
+After packaging an IPA, run `python3 PHKMenuBridge/Tools/check_ipa_load.py YourApp.ipa --crc`.
+The validator confirms that both dylibs are physically present and named in Mach-O load commands. It intentionally reports failure when the legacy library is absent because PHKMenuBridge 3.2 still delegates many functions to it. It cannot validate code-signing or real iPhone runtime behavior.

@@ -19,6 +19,8 @@ jobs:
           /tmp/phk-check
           clang++ -std=c++17 -Wall -Wextra -Werror PHKMenuBridge/Core/PHKTouchTracker.cpp PHKMenuBridge/Tests/touch_tracker_test.cpp -o /tmp/phk-touches
           /tmp/phk-touches
+      - name: Syntax check IPA inspection tool
+        run: python3 -m py_compile PHKMenuBridge/Tools/check_ipa_load.py
       - name: Compile independent arm64 dylib for iOS
         shell: bash
         run: |
