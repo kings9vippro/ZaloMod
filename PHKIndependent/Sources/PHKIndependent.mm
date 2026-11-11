@@ -626,6 +626,50 @@ NSInteger PHKIndependentParseCommand(NSString *command,BOOL hasRepliedImage){
     return (NSInteger)phk::parseCommand(value,hasRepliedImage);
 }
 extern "C" __attribute__((visibility("default")))
+NSString *PHKIndependentRunLocalCommand(NSString *command,UIImage *repliedImage,
+                                        NSData **outSticker){
+    if(outSticker)*outSticker=nil;
+    if(![command isKindOfClass:[NSString class]])return @"Lệnh không hợp lệ.";
+    const char *text=command.UTF8String;
+    if(!text)return @"Lỗi chuyển đổi UTF-8.";
+    const auto parsed=phk::parseCommandDetailed(text,repliedImage!=nil);
+    NSString *const colorKey=kColorKey;
+    switch(parsed.kind){
+        case phk::Command::menu:
+            PHKIndependentShowMenu();
+            return @"Đã yêu cầu mở PHK Menu.";
+        case phk::Command::colorIndex:
+            [NSUserDefaults.standardUserDefaults setInteger:parsed.value-1 forKey:colorKey];
+            [[PHKDockCoordinator shared] refreshDock];
+            return @"Đã đổi màu nhấn của PHK.";
+        case phk::Command::colorRandom: {
+            NSInteger old=[NSUserDefaults.standardUserDefaults integerForKey:colorKey];
+            NSInteger next=(old+1+arc4random_uniform(6))%7;
+            [NSUserDefaults.standardUserDefaults setInteger:next forKey:colorKey];
+            [[PHKDockCoordinator shared] refreshDock];
+            return @"Đã chọn một trong bảy màu chuẩn.";
+        }
+        case phk::Command::fontSize:
+            [NSUserDefaults.standardUserDefaults setInteger:parsed.value forKey:kFontSizeKey];
+            [[PHKDockCoordinator shared] refreshDock];
+            return @"Đã đặt cỡ chữ của menu.";
+        case phk::Command::setDelay:
+            [NSUserDefaults.standardUserDefaults setInteger:parsed.value forKey:kDelayKey];
+            return @"Đã đặt delay cho bộ gửi được cấp quyền.";
+        case phk::Command::missingImage:
+            return @"Cần ảnh được trả lời để tạo PNG sticker.";
+        case phk::Command::sticker: {
+            NSData *png=PHKIndependentStickerPNG(repliedImage);
+            if(!png)return @"Không chuyển được ảnh.";
+            if(outSticker)*outSticker=png;
+            return @"Đã tạo PNG cục bộ; ứng dụng chủ phải gửi hoặc đăng ký sticker.";
+        }
+        case phk::Command::help:
+            return @".menu | .sticker | .color random | .color 1–7 | .font 10–18 | .delay 1–60";
+        default:return @"Không nhận diện được lệnh PHK.";
+    }
+}
+extern "C" __attribute__((visibility("default")))
 BOOL PHKIndependentSchedule(NSString *message,NSTimeInterval delay,void (^callback)(NSString *)){
     if(![message isKindOfClass:[NSString class]] || message.length==0 ||
        message.length>1024 || !callback || !std::isfinite(delay) || delay<1 || delay>60)return NO;
