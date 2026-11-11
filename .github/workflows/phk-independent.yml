@@ -19,6 +19,8 @@ jobs:
             PHKIndependent/Core/PHKCore.cpp PHKIndependent/Tests/core_test.cpp \
             -o /tmp/phk-independent-test
           /tmp/phk-independent-test
+      - name: Verify Mach-O missing-library diagnostics
+        run: python3 -m unittest discover -s PHKIndependent/Tests -p 'test_*.py' -v
       - name: Build unsigned native iOS ARM64 dylib
         shell: bash
         run: |
