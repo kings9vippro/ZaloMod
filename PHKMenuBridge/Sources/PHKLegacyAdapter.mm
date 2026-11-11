@@ -38,6 +38,7 @@ static BOOL PHKHasMethod(Class klass, SEL selector, unsigned arguments, char res
     }
     return YES;
 }
+static BOOL PHKMainThread(void){ return [NSThread isMainThread]; }
 static id PHKInstance(void) {
     Class type=NSClassFromString(@"ZaloModViewController");
     SEL shared=NSSelectorFromString(@"sharedInstance");
@@ -83,6 +84,7 @@ static BOOL PHKWriteTextField(id instance,NSString *prop,NSString *value) {
     return ((BOOL(*)(id,SEL))objc_msgSend)(c,s);
 }
 - (BOOL)applyToggle:(NSString *)actionName sender:(UISwitch *)sender {
+    if(!PHKMainThread() || ![sender isKindOfClass:[UISwitch class]])return NO;
     if (![PHKToggleAllowlist() containsObject:actionName])return NO;
     id vc=PHKInstance();SEL s=NSSelectorFromString(actionName);
     if(!vc || !PHKHasMethod(object_getClass(vc),s,3,'v',YES))return NO;
@@ -90,48 +92,53 @@ static BOOL PHKWriteTextField(id instance,NSString *prop,NSString *value) {
     ((void(*)(id,SEL,id))objc_msgSend)(vc,s,sender);return YES;
 }
 - (BOOL)applyAction:(NSString *)actionName {
+    if(!PHKMainThread())return NO;
     if(![PHKActionAllowlist() containsObject:actionName])return NO;
     id vc=PHKInstance();SEL s=NSSelectorFromString(actionName);
-    if(!vc||!PHKHasMethod(object_getClass(vc),s,2,0,NO))return NO;
+    if(!vc||!PHKHasMethod(object_getClass(vc),s,2,'v',NO))return NO;
     PHKLoadLegacyUI(vc);
     ((void(*)(id,SEL))objc_msgSend)(vc,s);return YES;
 }
 - (BOOL)setLegacyText:(NSString *)value field:(NSString *)field {
+    if(!PHKMainThread() || ![value isKindOfClass:[NSString class]] || value.length>1024)return NO;
     NSSet *allowed=[NSSet setWithArray:@[@"txtTargetId",@"txtMessageContent",@"txtGroupLinkOrId",@"txtKickUid",@"txtBanUid",@"txtSongName",@"txtArtistName"]];
     if(![allowed containsObject:field])return NO;
     id vc=PHKInstance(); PHKLoadLegacyUI(vc);
     return PHKWriteTextField(vc,field,value ?: @"");
 }
 - (BOOL)applyTTL:(NSString *)value unit:(NSInteger)unit {
+    if(!PHKMainThread() || ![value isKindOfClass:[NSString class]] || unit<0 || unit>2)return NO;
     std::int64_t milli=0;
     if (!phk::validTTL((value?:@"").UTF8String,(int)unit,&milli))return NO;
     id vc=PHKInstance();PHKLoadLegacyUI(vc);
     if(!PHKWriteTextField(vc,@"txtTTLValue",value))return NO;
     SEL getter=NSSelectorFromString(@"ttlSegment");
-    if (![vc respondsToSelector:getter])return NO;
+    if(!vc || !PHKHasMethod(object_getClass(vc),getter,2,'@',NO))return NO;
     id seg=((id(*)(id,SEL))objc_msgSend)(vc,getter);
     if (![seg isKindOfClass:[UISegmentedControl class]])return NO;
     ((UISegmentedControl *)seg).selectedSegmentIndex=unit+1; // original segments: Off, Seconds, Hours, Days
     SEL changed=NSSelectorFromString(@"ttlUnitChanged:");
-    if([vc respondsToSelector:changed])((void(*)(id,SEL,id))objc_msgSend)(vc,changed,seg);
+    if(!PHKHasMethod(object_getClass(vc),changed,3,'v',YES))return NO;
+    ((void(*)(id,SEL,id))objc_msgSend)(vc,changed,seg);
     SEL apply=NSSelectorFromString(@"actionApplyTTL");
-    if(![vc respondsToSelector:apply])return NO;
+    if(!PHKHasMethod(object_getClass(vc),apply,2,'v',NO))return NO;
     ((void(*)(id,SEL))objc_msgSend)(vc,apply);
     return YES;
 }
 - (BOOL)applyBotPrefix:(NSString *)value {
+    if(!PHKMainThread() || ![value isKindOfClass:[NSString class]])return NO;
     if(!phk::validPrefix((value?:@"").UTF8String))return NO;
     id vc=PHKInstance();PHKLoadLegacyUI(vc);
     if(!PHKWriteTextField(vc,@"txtBotPrefix",value))return NO;
     SEL apply=NSSelectorFromString(@"actionApplyBotPrefix");
-    if(![vc respondsToSelector:apply])return NO;
+    if(!PHKHasMethod(object_getClass(vc),apply,2,'v',NO))return NO;
     ((void(*)(id,SEL))objc_msgSend)(vc,apply);return YES;
 }
 - (NSArray<UIButton *> *)legacyOptions:(NSString *)kind {
     if(![@[@"font",@"color"] containsObject:kind])return @[];
     id vc=PHKInstance();PHKLoadLegacyUI(vc);
     SEL getter=NSSelectorFromString([kind isEqualToString:@"font"]?@"fontButtons":@"colorButtons");
-    if(!vc||![vc respondsToSelector:getter])return @[];
+    if(!vc||!PHKHasMethod(object_getClass(vc),getter,2,'@',NO))return @[];
     id original=((id(*)(id,SEL))objc_msgSend)(vc,getter);
     if(![original isKindOfClass:[NSArray class]])return @[];
     NSMutableArray *out=[NSMutableArray new];
@@ -141,34 +148,37 @@ static BOOL PHKWriteTextField(id instance,NSString *prop,NSString *value) {
 - (BOOL)applyLegacyOption:(UIButton *)button kind:(NSString *)kind {
     if (!button||![@[@"font",@"color"] containsObject:kind])return NO;
     id vc=PHKInstance();SEL sel=NSSelectorFromString([kind isEqualToString:@"font"]?@"fontButtonTapped:":@"colorButtonClicked:");
-    if(!vc||![vc respondsToSelector:sel])return NO;
+    if(!PHKMainThread() || !vc || !PHKHasMethod(object_getClass(vc),sel,3,'v',YES))return NO;
     ((void(*)(id,SEL,id))objc_msgSend)(vc,sel,button);return YES;
 }
 - (BOOL)applyFontSize:(NSString *)value {
+    if(!PHKMainThread() || ![value isKindOfClass:[NSString class]])return NO;
     NSInteger size=value.integerValue;
     if(size<10||size>60||![value isEqualToString:[NSString stringWithFormat:@"%ld",(long)size]])return NO;
     id vc=PHKInstance();PHKLoadLegacyUI(vc);
     if(!PHKWriteTextField(vc,@"txtFontSize",value))return NO;
     SEL apply=NSSelectorFromString(@"actionApplyFontSize");
-    if(![vc respondsToSelector:apply])return NO;
+    if(!PHKHasMethod(object_getClass(vc),apply,2,'v',NO))return NO;
     ((void(*)(id,SEL))objc_msgSend)(vc,apply);return YES;
 }
 - (NSString *)accountDescription {
     id vc=PHKInstance();if(!vc)return nil;
     SEL a=NSSelectorFromString(@"botSelfName");
-    if(![vc respondsToSelector:a])return @"Phiên hiện tại";
+    if(!PHKHasMethod(object_getClass(vc),a,2,'@',NO))return @"Phiên hiện tại";
     id name=((id(*)(id,SEL))objc_msgSend)(vc,a);
     return [name isKindOfClass:[NSString class]] && [name length] ? name : @"Phiên hiện tại";
 }
 - (void)openOriginalMenuFrom:(UIViewController *)presenter {
     id vc=PHKInstance();SEL s=NSSelectorFromString(@"showMenuFromViewController:");
-    if(vc&&[vc respondsToSelector:s])((void(*)(id,SEL,id))objc_msgSend)(vc,s,presenter);
+    if(PHKMainThread() && vc && PHKHasMethod(object_getClass(vc),s,3,'v',YES) &&
+       [presenter isKindOfClass:[UIViewController class]])
+        ((void(*)(id,SEL,id))objc_msgSend)(vc,s,presenter);
 }
 - (void)hideFloatingButtonIfPresent {
     Class c=NSClassFromString(@"ZaloFloatingButton");SEL shared=NSSelectorFromString(@"sharedInstance");
-    if (!c||![c respondsToSelector:shared])return;
+    if(!PHKMainThread() || !c || !PHKHasMethod(object_getClass(c),shared,2,'@',NO))return;
     id b=((id(*)(id,SEL))objc_msgSend)(c,shared);
     SEL hide=NSSelectorFromString(@"hide");
-    if (b&&[b respondsToSelector:hide])((void(*)(id,SEL))objc_msgSend)(b,hide);
+    if(b&&PHKHasMethod(object_getClass(b),hide,2,'v',NO))((void(*)(id,SEL))objc_msgSend)(b,hide);
 }
 @end

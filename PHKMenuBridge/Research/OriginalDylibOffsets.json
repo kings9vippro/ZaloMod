@@ -1,0 +1,1217 @@
+{
+  "sha256": "564b8539a690c988975b6b80d884c68a5a476482579b24a3eacac459a35a000d",
+  "source": "Original user-provided ZaloModVIP.dylib; static Mach-O symbols; NOT ASLR-resolved pointers",
+  "methodCount": 191,
+  "hookCount": 63,
+  "controllerMethods": [
+    {
+      "offset": "0x5AE0",
+      "kind": "+",
+      "selector": "sharedInstance"
+    },
+    {
+      "offset": "0x5B4C",
+      "kind": "+",
+      "selector": "isAntiUndoEnabled"
+    },
+    {
+      "offset": "0x5BC0",
+      "kind": "+",
+      "selector": "customTTLMilliseconds"
+    },
+    {
+      "offset": "0x5CC0",
+      "kind": "+",
+      "selector": "customTTLSeconds"
+    },
+    {
+      "offset": "0x5CF0",
+      "kind": "+",
+      "selector": "customFontSize"
+    },
+    {
+      "offset": "0x5D48",
+      "kind": "+",
+      "selector": "setCustomFontSize:"
+    },
+    {
+      "offset": "0x5DB8",
+      "kind": "+",
+      "selector": "selectedTextColorName"
+    },
+    {
+      "offset": "0x5E34",
+      "kind": "+",
+      "selector": "setSelectedTextColorName:"
+    },
+    {
+      "offset": "0x5EB8",
+      "kind": "+",
+      "selector": "selectedTextColor"
+    },
+    {
+      "offset": "0x62FC",
+      "kind": "+",
+      "selector": "isBlockZStyleEnabled"
+    },
+    {
+      "offset": "0x6370",
+      "kind": "+",
+      "selector": "isBugZLStyleEnabled"
+    },
+    {
+      "offset": "0x6388",
+      "kind": "+",
+      "selector": "isAdBlockEnabled"
+    },
+    {
+      "offset": "0x63FC",
+      "kind": "+",
+      "selector": "isUnlimitedMediaEnabled"
+    },
+    {
+      "offset": "0x6470",
+      "kind": "+",
+      "selector": "isUnlockRBTEnabled"
+    },
+    {
+      "offset": "0x64E4",
+      "kind": "+",
+      "selector": "isBotRunning"
+    },
+    {
+      "offset": "0x6530",
+      "kind": "+",
+      "selector": "myUserId"
+    },
+    {
+      "offset": "0x6834",
+      "kind": "+",
+      "selector": "isGhostSeenEnabled"
+    },
+    {
+      "offset": "0x6880",
+      "kind": "+",
+      "selector": "isHideTypingEnabled"
+    },
+    {
+      "offset": "0x68CC",
+      "kind": "+",
+      "selector": "isBugOriginalEnabled"
+    },
+    {
+      "offset": "0x6940",
+      "kind": "+",
+      "selector": "isBugZBusinessEnabled"
+    },
+    {
+      "offset": "0x69B4",
+      "kind": "+",
+      "selector": "isAntiRainEnabled"
+    },
+    {
+      "offset": "0x6A28",
+      "kind": "+",
+      "selector": "isChatBgEnabled"
+    },
+    {
+      "offset": "0x6A74",
+      "kind": "+",
+      "selector": "chatBgImagePath"
+    },
+    {
+      "offset": "0x6AC8",
+      "kind": "+",
+      "selector": "injectedMP3Path"
+    },
+    {
+      "offset": "0x6B1C",
+      "kind": "+",
+      "selector": "isProfileMusicEnabled"
+    },
+    {
+      "offset": "0x6B90",
+      "kind": "+",
+      "selector": "injectedSongName"
+    },
+    {
+      "offset": "0x6C7C",
+      "kind": "+",
+      "selector": "injectedArtistName"
+    },
+    {
+      "offset": "0x6D00",
+      "kind": "-",
+      "selector": "viewDidLoad"
+    },
+    {
+      "offset": "0x6EAC",
+      "kind": "-",
+      "selector": "handleTapBackground:"
+    },
+    {
+      "offset": "0x6F68",
+      "kind": "-",
+      "selector": "setupMainContainer"
+    },
+    {
+      "offset": "0x7BB0",
+      "kind": "-",
+      "selector": "setupTabs"
+    },
+    {
+      "offset": "0xC560",
+      "kind": "-",
+      "selector": "addFontRowToView:y:label:fonts:"
+    },
+    {
+      "offset": "0xC97C",
+      "kind": "-",
+      "selector": "fontButtonTapped:"
+    },
+    {
+      "offset": "0xCD98",
+      "kind": "-",
+      "selector": "addColorRowToView:y:label:colors:"
+    },
+    {
+      "offset": "0xD3B8",
+      "kind": "-",
+      "selector": "colorButtonClicked:"
+    },
+    {
+      "offset": "0xD78C",
+      "kind": "-",
+      "selector": "addSwitchRowToView:y:title:subtitle:initial:action:"
+    },
+    {
+      "offset": "0xDAF4",
+      "kind": "-",
+      "selector": "createTextFieldWithPlaceholder:y:width:"
+    },
+    {
+      "offset": "0xDD88",
+      "kind": "-",
+      "selector": "createActionButtonWithTitle:y:width:color:"
+    },
+    {
+      "offset": "0xDED8",
+      "kind": "-",
+      "selector": "setupTTLSelection"
+    },
+    {
+      "offset": "0xDF50",
+      "kind": "-",
+      "selector": "setupFontSizeSelection"
+    },
+    {
+      "offset": "0xE04C",
+      "kind": "-",
+      "selector": "fontSizePresetChanged:"
+    },
+    {
+      "offset": "0xE1E4",
+      "kind": "-",
+      "selector": "actionApplyFontSize"
+    },
+    {
+      "offset": "0xE31C",
+      "kind": "-",
+      "selector": "updateFontSizeSummaryLabel"
+    },
+    {
+      "offset": "0xE484",
+      "kind": "-",
+      "selector": "segmentChanged:"
+    },
+    {
+      "offset": "0xE4B0",
+      "kind": "-",
+      "selector": "switchTab:"
+    },
+    {
+      "offset": "0xE6D8",
+      "kind": "-",
+      "selector": "toggleAntiUndo:"
+    },
+    {
+      "offset": "0xE778",
+      "kind": "-",
+      "selector": "toggleBugOriginal:"
+    },
+    {
+      "offset": "0xE818",
+      "kind": "-",
+      "selector": "toggleBugZBusiness:"
+    },
+    {
+      "offset": "0xE8B8",
+      "kind": "-",
+      "selector": "toggleBlockZStyle:"
+    },
+    {
+      "offset": "0xE990",
+      "kind": "-",
+      "selector": "toggleBugZLStyle:"
+    },
+    {
+      "offset": "0xE994",
+      "kind": "-",
+      "selector": "toggleAdBlock:"
+    },
+    {
+      "offset": "0xEA34",
+      "kind": "-",
+      "selector": "toggleUnlimitedMedia:"
+    },
+    {
+      "offset": "0xEAD4",
+      "kind": "-",
+      "selector": "toggleUnlockRBT:"
+    },
+    {
+      "offset": "0xEB74",
+      "kind": "-",
+      "selector": "toggleGhostSeen:"
+    },
+    {
+      "offset": "0xEC14",
+      "kind": "-",
+      "selector": "toggleHideTyping:"
+    },
+    {
+      "offset": "0xECB4",
+      "kind": "-",
+      "selector": "toggleAntiRain:"
+    },
+    {
+      "offset": "0xED74",
+      "kind": "-",
+      "selector": "toggleChatBg:"
+    },
+    {
+      "offset": "0xEE3C",
+      "kind": "-",
+      "selector": "updateChatBgStatusLabel"
+    },
+    {
+      "offset": "0xF064",
+      "kind": "-",
+      "selector": "actionPickChatBackground"
+    },
+    {
+      "offset": "0xF0C8",
+      "kind": "-",
+      "selector": "actionRemoveChatBackground"
+    },
+    {
+      "offset": "0xF1E4",
+      "kind": "-",
+      "selector": "imagePickerController:didFinishPickingMediaWithInfo:"
+    },
+    {
+      "offset": "0xF390",
+      "kind": "-",
+      "selector": "imagePickerControllerDidCancel:"
+    },
+    {
+      "offset": "0xF3A0",
+      "kind": "-",
+      "selector": "toggleProfileMusic:"
+    },
+    {
+      "offset": "0xF460",
+      "kind": "-",
+      "selector": "songNameChanged:"
+    },
+    {
+      "offset": "0xF518",
+      "kind": "-",
+      "selector": "artistNameChanged:"
+    },
+    {
+      "offset": "0xF5D0",
+      "kind": "-",
+      "selector": "actionToggleTestPlay"
+    },
+    {
+      "offset": "0xF9FC",
+      "kind": "-",
+      "selector": "updateMP3StatusLabel"
+    },
+    {
+      "offset": "0xFC68",
+      "kind": "-",
+      "selector": "actionPickProfileMP3"
+    },
+    {
+      "offset": "0xFCDC",
+      "kind": "-",
+      "selector": "documentPicker:didPickDocumentsAtURLs:"
+    },
+    {
+      "offset": "0x100CC",
+      "kind": "-",
+      "selector": "documentPickerWasCancelled:"
+    },
+    {
+      "offset": "0x100D0",
+      "kind": "-",
+      "selector": "ttlUnitChanged:"
+    },
+    {
+      "offset": "0x101B8",
+      "kind": "-",
+      "selector": "ttlTextChanged:"
+    },
+    {
+      "offset": "0x10234",
+      "kind": "-",
+      "selector": "saveCurrentTTL"
+    },
+    {
+      "offset": "0x1031C",
+      "kind": "-",
+      "selector": "updateTTLSummaryLabel"
+    },
+    {
+      "offset": "0x10588",
+      "kind": "-",
+      "selector": "actionApplyTTL"
+    },
+    {
+      "offset": "0x1067C",
+      "kind": "-",
+      "selector": "actionSendMessage"
+    },
+    {
+      "offset": "0x10820",
+      "kind": "-",
+      "selector": "actionJoinGroup"
+    },
+    {
+      "offset": "0x10934",
+      "kind": "-",
+      "selector": "actionKickMember"
+    },
+    {
+      "offset": "0x10A70",
+      "kind": "-",
+      "selector": "actionLeaveGroup"
+    },
+    {
+      "offset": "0x10BAC",
+      "kind": "+",
+      "selector": "botPrefix"
+    },
+    {
+      "offset": "0x10C30",
+      "kind": "+",
+      "selector": "setActiveChatVC:"
+    },
+    {
+      "offset": "0x10C34",
+      "kind": "+",
+      "selector": "activeChatVC"
+    },
+    {
+      "offset": "0x10D1C",
+      "kind": "-",
+      "selector": "updateBotStatusUI"
+    },
+    {
+      "offset": "0x1108C",
+      "kind": "-",
+      "selector": "botRefreshAccountInfo"
+    },
+    {
+      "offset": "0x11820",
+      "kind": "-",
+      "selector": "actionStartBot"
+    },
+    {
+      "offset": "0x118B8",
+      "kind": "-",
+      "selector": "actionStopBot"
+    },
+    {
+      "offset": "0x11948",
+      "kind": "-",
+      "selector": "actionApplyBotPrefix"
+    },
+    {
+      "offset": "0x11AD8",
+      "kind": "-",
+      "selector": "actionExportBotConfig"
+    },
+    {
+      "offset": "0x11EE8",
+      "kind": "+",
+      "selector": "processBotIncomingMessage:fromUid:toThreadId:isGroup:chatVC:"
+    },
+    {
+      "offset": "0x13458",
+      "kind": "+",
+      "selector": "botSendMessage:toThreadId:chatVC:"
+    },
+    {
+      "offset": "0x139D8",
+      "kind": "-",
+      "selector": "showToast:"
+    },
+    {
+      "offset": "0x13EA4",
+      "kind": "-",
+      "selector": "textFieldShouldReturn:"
+    },
+    {
+      "offset": "0x13EC0",
+      "kind": "-",
+      "selector": "showMenuFromViewController:"
+    },
+    {
+      "offset": "0x13FCC",
+      "kind": "-",
+      "selector": "actionPreviewLockedAccount"
+    },
+    {
+      "offset": "0x13FF0",
+      "kind": "+",
+      "selector": "showAccountLockedDemoFromVC:"
+    },
+    {
+      "offset": "0x14010",
+      "kind": "-",
+      "selector": "dismissMenu"
+    },
+    {
+      "offset": "0x140E4",
+      "kind": "-",
+      "selector": "delegate"
+    },
+    {
+      "offset": "0x14104",
+      "kind": "-",
+      "selector": "setDelegate:"
+    },
+    {
+      "offset": "0x14118",
+      "kind": "-",
+      "selector": "blurContainer"
+    },
+    {
+      "offset": "0x14128",
+      "kind": "-",
+      "selector": "setBlurContainer:"
+    },
+    {
+      "offset": "0x1413C",
+      "kind": "-",
+      "selector": "menuBox"
+    },
+    {
+      "offset": "0x1414C",
+      "kind": "-",
+      "selector": "setMenuBox:"
+    },
+    {
+      "offset": "0x14160",
+      "kind": "-",
+      "selector": "segmentedControl"
+    },
+    {
+      "offset": "0x14170",
+      "kind": "-",
+      "selector": "setSegmentedControl:"
+    },
+    {
+      "offset": "0x14184",
+      "kind": "-",
+      "selector": "contentScrollView"
+    },
+    {
+      "offset": "0x14194",
+      "kind": "-",
+      "selector": "setContentScrollView:"
+    },
+    {
+      "offset": "0x141A8",
+      "kind": "-",
+      "selector": "lblChatBgStatus"
+    },
+    {
+      "offset": "0x141B8",
+      "kind": "-",
+      "selector": "setLblChatBgStatus:"
+    },
+    {
+      "offset": "0x141CC",
+      "kind": "-",
+      "selector": "lblMP3Status"
+    },
+    {
+      "offset": "0x141DC",
+      "kind": "-",
+      "selector": "setLblMP3Status:"
+    },
+    {
+      "offset": "0x141F0",
+      "kind": "-",
+      "selector": "txtSongName"
+    },
+    {
+      "offset": "0x14200",
+      "kind": "-",
+      "selector": "setTxtSongName:"
+    },
+    {
+      "offset": "0x14214",
+      "kind": "-",
+      "selector": "txtArtistName"
+    },
+    {
+      "offset": "0x14224",
+      "kind": "-",
+      "selector": "setTxtArtistName:"
+    },
+    {
+      "offset": "0x14238",
+      "kind": "-",
+      "selector": "btnTestPlay"
+    },
+    {
+      "offset": "0x14248",
+      "kind": "-",
+      "selector": "setBtnTestPlay:"
+    },
+    {
+      "offset": "0x1425C",
+      "kind": "-",
+      "selector": "menuAudioPlayer"
+    },
+    {
+      "offset": "0x1426C",
+      "kind": "-",
+      "selector": "setMenuAudioPlayer:"
+    },
+    {
+      "offset": "0x14280",
+      "kind": "-",
+      "selector": "tabMessagesView"
+    },
+    {
+      "offset": "0x14290",
+      "kind": "-",
+      "selector": "setTabMessagesView:"
+    },
+    {
+      "offset": "0x142A4",
+      "kind": "-",
+      "selector": "tabFontsView"
+    },
+    {
+      "offset": "0x142B4",
+      "kind": "-",
+      "selector": "setTabFontsView:"
+    },
+    {
+      "offset": "0x142C8",
+      "kind": "-",
+      "selector": "tabZBusinessView"
+    },
+    {
+      "offset": "0x142D8",
+      "kind": "-",
+      "selector": "setTabZBusinessView:"
+    },
+    {
+      "offset": "0x142EC",
+      "kind": "-",
+      "selector": "tabGroupsView"
+    },
+    {
+      "offset": "0x142FC",
+      "kind": "-",
+      "selector": "setTabGroupsView:"
+    },
+    {
+      "offset": "0x14310",
+      "kind": "-",
+      "selector": "tabAdminView"
+    },
+    {
+      "offset": "0x14320",
+      "kind": "-",
+      "selector": "setTabAdminView:"
+    },
+    {
+      "offset": "0x14334",
+      "kind": "-",
+      "selector": "ttlSegment"
+    },
+    {
+      "offset": "0x14344",
+      "kind": "-",
+      "selector": "setTtlSegment:"
+    },
+    {
+      "offset": "0x14358",
+      "kind": "-",
+      "selector": "txtTTLValue"
+    },
+    {
+      "offset": "0x14368",
+      "kind": "-",
+      "selector": "setTxtTTLValue:"
+    },
+    {
+      "offset": "0x1437C",
+      "kind": "-",
+      "selector": "lblTTLSummary"
+    },
+    {
+      "offset": "0x1438C",
+      "kind": "-",
+      "selector": "setLblTTLSummary:"
+    },
+    {
+      "offset": "0x143A0",
+      "kind": "-",
+      "selector": "lblCurrentFont"
+    },
+    {
+      "offset": "0x143B0",
+      "kind": "-",
+      "selector": "setLblCurrentFont:"
+    },
+    {
+      "offset": "0x143C4",
+      "kind": "-",
+      "selector": "fontButtons"
+    },
+    {
+      "offset": "0x143D4",
+      "kind": "-",
+      "selector": "setFontButtons:"
+    },
+    {
+      "offset": "0x143E8",
+      "kind": "-",
+      "selector": "lblCurrentTextColor"
+    },
+    {
+      "offset": "0x143F8",
+      "kind": "-",
+      "selector": "setLblCurrentTextColor:"
+    },
+    {
+      "offset": "0x1440C",
+      "kind": "-",
+      "selector": "colorButtons"
+    },
+    {
+      "offset": "0x1441C",
+      "kind": "-",
+      "selector": "setColorButtons:"
+    },
+    {
+      "offset": "0x14430",
+      "kind": "-",
+      "selector": "fontSizeSegment"
+    },
+    {
+      "offset": "0x14440",
+      "kind": "-",
+      "selector": "setFontSizeSegment:"
+    },
+    {
+      "offset": "0x14454",
+      "kind": "-",
+      "selector": "txtFontSize"
+    },
+    {
+      "offset": "0x14464",
+      "kind": "-",
+      "selector": "setTxtFontSize:"
+    },
+    {
+      "offset": "0x14478",
+      "kind": "-",
+      "selector": "lblFontSizeSummary"
+    },
+    {
+      "offset": "0x14488",
+      "kind": "-",
+      "selector": "setLblFontSizeSummary:"
+    },
+    {
+      "offset": "0x1449C",
+      "kind": "-",
+      "selector": "txtTargetId"
+    },
+    {
+      "offset": "0x144AC",
+      "kind": "-",
+      "selector": "setTxtTargetId:"
+    },
+    {
+      "offset": "0x144C0",
+      "kind": "-",
+      "selector": "txtMessageContent"
+    },
+    {
+      "offset": "0x144D0",
+      "kind": "-",
+      "selector": "setTxtMessageContent:"
+    },
+    {
+      "offset": "0x144E4",
+      "kind": "-",
+      "selector": "txtGroupLinkOrId"
+    },
+    {
+      "offset": "0x144F4",
+      "kind": "-",
+      "selector": "setTxtGroupLinkOrId:"
+    },
+    {
+      "offset": "0x14508",
+      "kind": "-",
+      "selector": "txtKickUid"
+    },
+    {
+      "offset": "0x14518",
+      "kind": "-",
+      "selector": "setTxtKickUid:"
+    },
+    {
+      "offset": "0x1452C",
+      "kind": "-",
+      "selector": "txtBanUid"
+    },
+    {
+      "offset": "0x1453C",
+      "kind": "-",
+      "selector": "setTxtBanUid:"
+    },
+    {
+      "offset": "0x14550",
+      "kind": "-",
+      "selector": "tabBotView"
+    },
+    {
+      "offset": "0x14560",
+      "kind": "-",
+      "selector": "setTabBotView:"
+    },
+    {
+      "offset": "0x14574",
+      "kind": "-",
+      "selector": "lblBotStatus"
+    },
+    {
+      "offset": "0x14584",
+      "kind": "-",
+      "selector": "setLblBotStatus:"
+    },
+    {
+      "offset": "0x14598",
+      "kind": "-",
+      "selector": "lblBotAccInfo"
+    },
+    {
+      "offset": "0x145A8",
+      "kind": "-",
+      "selector": "setLblBotAccInfo:"
+    },
+    {
+      "offset": "0x145BC",
+      "kind": "-",
+      "selector": "lblBotAdminInfo"
+    },
+    {
+      "offset": "0x145CC",
+      "kind": "-",
+      "selector": "setLblBotAdminInfo:"
+    },
+    {
+      "offset": "0x145E0",
+      "kind": "-",
+      "selector": "txtBotPrefix"
+    },
+    {
+      "offset": "0x145F0",
+      "kind": "-",
+      "selector": "setTxtBotPrefix:"
+    },
+    {
+      "offset": "0x14604",
+      "kind": "-",
+      "selector": "txtBotGroupId"
+    },
+    {
+      "offset": "0x14614",
+      "kind": "-",
+      "selector": "setTxtBotGroupId:"
+    },
+    {
+      "offset": "0x14628",
+      "kind": "-",
+      "selector": "txtBotMsg"
+    },
+    {
+      "offset": "0x14638",
+      "kind": "-",
+      "selector": "setTxtBotMsg:"
+    },
+    {
+      "offset": "0x1464C",
+      "kind": "-",
+      "selector": "btnBotStart"
+    },
+    {
+      "offset": "0x1465C",
+      "kind": "-",
+      "selector": "setBtnBotStart:"
+    },
+    {
+      "offset": "0x14670",
+      "kind": "-",
+      "selector": "btnBotStop"
+    },
+    {
+      "offset": "0x14680",
+      "kind": "-",
+      "selector": "setBtnBotStop:"
+    },
+    {
+      "offset": "0x14694",
+      "kind": "-",
+      "selector": "botRunning"
+    },
+    {
+      "offset": "0x146A4",
+      "kind": "-",
+      "selector": "setBotRunning:"
+    },
+    {
+      "offset": "0x146B4",
+      "kind": "-",
+      "selector": "botTimer"
+    },
+    {
+      "offset": "0x146C4",
+      "kind": "-",
+      "selector": "setBotTimer:"
+    },
+    {
+      "offset": "0x146D8",
+      "kind": "-",
+      "selector": "botCookieStr"
+    },
+    {
+      "offset": "0x146E8",
+      "kind": "-",
+      "selector": "setBotCookieStr:"
+    },
+    {
+      "offset": "0x146F4",
+      "kind": "-",
+      "selector": "botSelfUid"
+    },
+    {
+      "offset": "0x14704",
+      "kind": "-",
+      "selector": "setBotSelfUid:"
+    },
+    {
+      "offset": "0x14710",
+      "kind": "-",
+      "selector": "botSelfName"
+    },
+    {
+      "offset": "0x14720",
+      "kind": "-",
+      "selector": "setBotSelfName:"
+    },
+    {
+      "offset": "0x1472C",
+      "kind": "-",
+      "selector": "botAdminList"
+    },
+    {
+      "offset": "0x1473C",
+      "kind": "-",
+      "selector": "setBotAdminList:"
+    },
+    {
+      "offset": "0x14750",
+      "kind": "-",
+      "selector": "botSession"
+    },
+    {
+      "offset": "0x14760",
+      "kind": "-",
+      "selector": "setBotSession:"
+    },
+    {
+      "offset": "0x14774",
+      "kind": "-",
+      "selector": ".cxx_destruct"
+    }
+  ],
+  "hooks": [
+    {
+      "offset": "0x1C970",
+      "name": "_hook_UndoChatProcessor_updateUndoMessageContent"
+    },
+    {
+      "offset": "0x1CB80",
+      "name": "_hook_ChatOperationProcessor_processUndoMessage"
+    },
+    {
+      "offset": "0x1CC3C",
+      "name": "_hook_ChatOperationProcessor_processUpdateUndo"
+    },
+    {
+      "offset": "0x1CDD0",
+      "name": "_hook_ChatOperationProcessor_processMessageWithChatEntity_itemDict"
+    },
+    {
+      "offset": "0x1D0D8",
+      "name": "_hook_enableShowOriginPhoto"
+    },
+    {
+      "offset": "0x1D0E0",
+      "name": "_hook_originalBadgeType"
+    },
+    {
+      "offset": "0x1D0E8",
+      "name": "_hook_originalBadge"
+    },
+    {
+      "offset": "0x1D0F0",
+      "name": "_hook_currentQuality_original"
+    },
+    {
+      "offset": "0x1D118",
+      "name": "_hook_alwaysTrue"
+    },
+    {
+      "offset": "0x1D124",
+      "name": "_hook_allowRememberQuality"
+    },
+    {
+      "offset": "0x1D12C",
+      "name": "_hook_originalCompressQuality"
+    },
+    {
+      "offset": "0x1D134",
+      "name": "_hook_maxOriginalLimit"
+    },
+    {
+      "offset": "0x1D13C",
+      "name": "_hook_RichMessageContent_isOriginal"
+    },
+    {
+      "offset": "0x1D1CC",
+      "name": "_hook_RichMessageContent_isPhotoHD"
+    },
+    {
+      "offset": "0x1D25C",
+      "name": "_hook_ChatEntity_photoQuality"
+    },
+    {
+      "offset": "0x1D2EC",
+      "name": "_hook_ChatEntity_isExpiredMessage"
+    },
+    {
+      "offset": "0x1D4A0",
+      "name": "_hook_BaseChatTVC_getTextToSend"
+    },
+    {
+      "offset": "0x1D580",
+      "name": "_hook_BaseChatTVC_sendMessageWithText_needCreateBubble"
+    },
+    {
+      "offset": "0x1D770",
+      "name": "_hook_BaseChatTVC_createChatToSendWithMessage"
+    },
+    {
+      "offset": "0x1D970",
+      "name": "_hook_BaseChatTVC_willDisplayCell_forItemAtIndexPath"
+    },
+    {
+      "offset": "0x1DB64",
+      "name": "_hook_sendChat_checkUpload"
+    },
+    {
+      "offset": "0x1DC00",
+      "name": "_hook_sendChat_destinations"
+    },
+    {
+      "offset": "0x1DCCC",
+      "name": "_hook_attachTTLValueForMessageIfNeed"
+    },
+    {
+      "offset": "0x1DD94",
+      "name": "_hook_checkCanSendSeenInboxEntity"
+    },
+    {
+      "offset": "0x1DE74",
+      "name": "_hook_sendTypingWithType"
+    },
+    {
+      "offset": "0x1DF34",
+      "name": "_hook_sendSeenWithChatEntity"
+    },
+    {
+      "offset": "0x1DFCC",
+      "name": "_hook_sendSeenServer"
+    },
+    {
+      "offset": "0x1E048",
+      "name": "_hook_sendSeenServerPeriodicallyIfNeeded"
+    },
+    {
+      "offset": "0x1E0C4",
+      "name": "_hook_sendSeenMessageWithSeenData"
+    },
+    {
+      "offset": "0x1E16C",
+      "name": "_hook_sendTypingWithVoiceBoardType"
+    },
+    {
+      "offset": "0x1E1F0",
+      "name": "_hook_sendSeenForLastReadMessage"
+    },
+    {
+      "offset": "0x1E26C",
+      "name": "_hook_sendSeenMessageWithChatEntity"
+    },
+    {
+      "offset": "0x1E304",
+      "name": "_hook_sendSeenInfoInboxEntity"
+    },
+    {
+      "offset": "0x1E39C",
+      "name": "_hook_isEnableTypingMessage"
+    },
+    {
+      "offset": "0x1E434",
+      "name": "_hook_zstyleAlwaysTrue"
+    },
+    {
+      "offset": "0x1E470",
+      "name": "_hook_zstylePackageIdVIP"
+    },
+    {
+      "offset": "0x1E4AC",
+      "name": "_hook_checkUserIsBusinessAccount"
+    },
+    {
+      "offset": "0x1E4B8",
+      "name": "_hook_titleBadge"
+    },
+    {
+      "offset": "0x1E4E4",
+      "name": "_hook_textColorBadge"
+    },
+    {
+      "offset": "0x1E540",
+      "name": "_hook_backgroundColorBadge"
+    },
+    {
+      "offset": "0x1E5A4",
+      "name": "_hook_getZStylePackageId"
+    },
+    {
+      "offset": "0x1E5E0",
+      "name": "_hook_zeroPrice"
+    },
+    {
+      "offset": "0x1E5E8",
+      "name": "_hook_DNCountdownView_startWithFireTime"
+    },
+    {
+      "offset": "0x1E688",
+      "name": "_hook_DNTickTimer_initWithFireTime_block"
+    },
+    {
+      "offset": "0x1E760",
+      "name": "_hook_ProfileMusicOverlay_openEmptyZStyleMusicProfile"
+    },
+    {
+      "offset": "0x1E7DC",
+      "name": "_hook_ProfileMusicOverlay_openEditZStyleMusicProfile"
+    },
+    {
+      "offset": "0x1E858",
+      "name": "_hook_returnNil"
+    },
+    {
+      "offset": "0x1E860",
+      "name": "_hook_alwaysFalse"
+    },
+    {
+      "offset": "0x1E920",
+      "name": "_hook_UIApplication_openURL_options_completion"
+    },
+    {
+      "offset": "0x1EB04",
+      "name": "_hook_UXZStylePromoteButton_layoutSubviews"
+    },
+    {
+      "offset": "0x1EBD4",
+      "name": "_hook_UXZStylePromoteButton_didMoveToSuperview"
+    },
+    {
+      "offset": "0x1EC94",
+      "name": "_hook_adBlockAlwaysFalse"
+    },
+    {
+      "offset": "0x1ECB4",
+      "name": "_hook_unlimitedMediaDuration"
+    },
+    {
+      "offset": "0x1ECE4",
+      "name": "_hook_unlimitedMediaFileSize"
+    },
+    {
+      "offset": "0x1ED10",
+      "name": "_hook_ProfileVC_viewDidAppear"
+    },
+    {
+      "offset": "0x1EE6C",
+      "name": "_hook_ProfileVC_viewWillDisappear"
+    },
+    {
+      "offset": "0x1EF50",
+      "name": "_hook_ProfileVC_viewDidLoad"
+    },
+    {
+      "offset": "0x1F0A4",
+      "name": "_hook_BaseChatTVC_viewWillAppear"
+    },
+    {
+      "offset": "0x1F1B4",
+      "name": "_hook_BaseChatTVC_viewDidLayoutSubviews"
+    },
+    {
+      "offset": "0x1FEE8",
+      "name": "_hook_zstyleVoidDoNothing"
+    },
+    {
+      "offset": "0x20DC4",
+      "name": "_hook_CAEmitterLayer_setEmitterCells"
+    },
+    {
+      "offset": "0x2113C",
+      "name": "_hook_effectTriggerBool_alwaysFalse"
+    },
+    {
+      "offset": "0x211FC",
+      "name": "_hook_effectTriggerVoid_genericNoOp"
+    }
+  ]
+}

@@ -19,6 +19,8 @@ jobs:
           /tmp/phk-check
           clang++ -std=c++17 -Wall -Wextra -Werror PHKMenuBridge/Core/PHKTouchTracker.cpp PHKMenuBridge/Tests/touch_tracker_test.cpp -o /tmp/phk-touches
           /tmp/phk-touches
+      - name: Cross-check legacy symbol inventory
+        run: python3 PHKMenuBridge/Tools/check_runtime_inventory.py
       - name: Syntax check IPA inspection tool
         run: python3 -m py_compile PHKMenuBridge/Tools/check_ipa_load.py
       - name: Compile independent arm64 dylib for iOS
@@ -32,6 +34,7 @@ jobs:
             -fobjc-exceptions -fvisibility=hidden -fstack-protector-strong -dynamiclib \
             -install_name '@rpath/PHKMenuBridge.dylib' \
             PHKMenuBridge/Sources/PHKLegacyAdapter.mm \
+            PHKMenuBridge/Sources/PHKLegacyDiagnostics.mm \
             PHKMenuBridge/Sources/PHKOverlayController.mm \
             PHKMenuBridge/Sources/PHKOverlayBootstrap.mm \
             PHKMenuBridge/Sources/PHKGestureEngine.mm \
@@ -40,6 +43,7 @@ jobs:
             -framework UIKit -framework Foundation -framework QuartzCore -o output/PHKMenuBridge.dylib
           xcrun nm -gU output/PHKMenuBridge.dylib | grep -q '_PHKBridgeOpenMenu'
           xcrun nm -gU output/PHKMenuBridge.dylib | grep -q '_PHKBridgeIsLoaded'
+          xcrun nm -gU output/PHKMenuBridge.dylib | grep -q '_PHKLegacyCompatibilityReport'
           file output/PHKMenuBridge.dylib
           xcrun vtool -show-build output/PHKMenuBridge.dylib || true
       - name: Build resource bundle
