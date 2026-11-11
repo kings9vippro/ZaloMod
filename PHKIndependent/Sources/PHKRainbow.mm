@@ -75,6 +75,16 @@ void PHKStyleRainbow(CAGradientLayer *layer, BOOL animate){
         PHKStyleRainbow(self.gradient,YES);
     else if(!shouldAnimate && [self.gradient animationForKey:@"phk-rainbow"])
         PHKStyleRainbow(self.gradient,NO);
+    if(!enabled){
+        NSInteger index=[NSUserDefaults.standardUserDefaults
+                          integerForKey:@"dev.phananhkhoi.independent.accent"];
+        const auto rgb=phk::paletteAt((std::uint64_t)MAX(0,index));
+        id shade=(__bridge id)[UIColor colorWithRed:rgb.r/255.0
+              green:rgb.g/255.0 blue:rgb.b/255.0 alpha:1].CGColor;
+        self.gradient.colors=@[shade,shade];
+    } else if(!shouldAnimate){
+        self.gradient.colors=PHKColorsAtOffset(0);
+    }
     [self setNeedsLayout];
 }
 - (void)didMoveToWindow{
