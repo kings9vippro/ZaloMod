@@ -68,7 +68,13 @@ void PHKStyleRainbow(CAGradientLayer *layer, BOOL animate){
 - (void)updateAppearance{
     id setting=[NSUserDefaults.standardUserDefaults objectForKey:PHKRainbowKey];
     BOOL enabled=setting?[setting boolValue]:YES;
-    PHKStyleRainbow(self.gradient,enabled&&self.window!=nil);
+    BOOL shouldAnimate=enabled && self.window!=nil &&
+         !UIAccessibilityIsReduceMotionEnabled() &&
+         !NSProcessInfo.processInfo.lowPowerModeEnabled;
+    if(shouldAnimate && ![self.gradient animationForKey:@"phk-rainbow"])
+        PHKStyleRainbow(self.gradient,YES);
+    else if(!shouldAnimate && [self.gradient animationForKey:@"phk-rainbow"])
+        PHKStyleRainbow(self.gradient,NO);
     [self setNeedsLayout];
 }
 - (void)didMoveToWindow{
