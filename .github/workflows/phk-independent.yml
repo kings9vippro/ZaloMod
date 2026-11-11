@@ -25,11 +25,13 @@ jobs:
           set -euo pipefail
           SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
           mkdir -p output
-          xcrun --sdk iphoneos clang++ -std=c++17 -arch arm64 \
-            -isysroot "$SDK" -miphoneos-version-min=15.1 \
-            -O2 -fobjc-arc -fblocks -fobjc-exceptions -fvisibility=hidden \
-            -fstack-protector-strong -c PHKIndependent/Sources/PHKIndependent.mm \
-            -o output/PHKIndependent-ui.o
+          for source in PHKIndependent/Sources/*.mm; do
+            object="output/$(basename "$source" .mm).o"
+            xcrun --sdk iphoneos clang++ -std=c++17 -arch arm64 \
+              -isysroot "$SDK" -miphoneos-version-min=15.1 \
+              -O2 -fobjc-arc -fblocks -fobjc-exceptions -fvisibility=hidden \
+              -fstack-protector-strong -c "$source" -o "$object"
+          done
           xcrun --sdk iphoneos clang++ -std=c++17 -arch arm64 \
             -isysroot "$SDK" -miphoneos-version-min=15.1 \
             -O2 -fvisibility=hidden -fstack-protector-strong -c \
@@ -37,7 +39,7 @@ jobs:
           xcrun --sdk iphoneos clang++ -arch arm64 -dynamiclib \
             -isysroot "$SDK" -miphoneos-version-min=15.1 \
             -install_name '@rpath/PHKIndependent.dylib' \
-            output/PHKIndependent-ui.o output/PHKIndependent-core.o \
+            output/*.o \
             -framework UIKit -framework Foundation -framework QuartzCore \
             -framework CoreGraphics -framework UniformTypeIdentifiers \
             -o output/PHKIndependent.dylib
@@ -45,6 +47,9 @@ jobs:
           xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentShowMenu'
           xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentStickerPNG'
           xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentSchedule'
+          xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentRegisterSender'
+          xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentSendTo'
+          xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentCancelPending'
           if xcrun otool -L output/PHKIndependent.dylib | grep -q 'ZaloModVIP'; then
             echo "Unexpected dependency on original ZaloModVIP dylib"
             exit 1
