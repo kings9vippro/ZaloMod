@@ -5,10 +5,25 @@
 #import <objc/runtime.h>
 #import <cmath>
 #import "../Core/PHKCore.hpp"
+#import "PHKRainbow.h"
+#import "PHKComposerController.h"
+#import "PHKMessageBridge.h"
 
 static NSString * const kColorKey=@"dev.phananhkhoi.independent.accent";
 static NSString * const kLanguageKey=@"dev.phananhkhoi.independent.language";
 static NSString * const kDelayKey=@"dev.phananhkhoi.independent.delay";
+static NSString * const kFontSizeKey=@"dev.phananhkhoi.independent.fontSize";
+static NSString * const kFontStyleKey=@"dev.phananhkhoi.independent.fontStyle";
+static NSString * const kRainbowKey=@"dev.phananhkhoi.independent.rainbow";
+static CGFloat PHKFontSizeSetting(void){
+    NSInteger size=[NSUserDefaults.standardUserDefaults integerForKey:kFontSizeKey];
+    return (CGFloat)(size>=10&&size<=18?size:11);
+}
+static BOOL PHKRainbowEnabled(void){
+    id value=[NSUserDefaults.standardUserDefaults objectForKey:kRainbowKey];
+    return value?[value boolValue]:YES;
+}
+
 static UIColor *PHKAccent(void){
     NSInteger index=[NSUserDefaults.standardUserDefaults integerForKey:kColorKey];
     const auto color=phk::paletteAt((std::uint64_t)MAX(0,index));
@@ -19,7 +34,13 @@ static BOOL PHKEnglish(void){
 }
 static NSString *PHKText(NSString *vi,NSString *en){return PHKEnglish()?en:vi;}
 static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
-    return [UIFont systemFontOfSize:size weight:weight];
+    UIFont *base=[UIFont systemFontOfSize:size weight:weight];
+    NSInteger style=[NSUserDefaults.standardUserDefaults integerForKey:kFontStyleKey];
+    if(style==0)return base;
+    UIFontDescriptorSystemDesign design=style==1?UIFontDescriptorSystemDesignRounded:
+                                     UIFontDescriptorSystemDesignSerif;
+    UIFontDescriptor *descriptor=[base.fontDescriptor fontDescriptorWithDesign:design];
+    return descriptor?[UIFont fontWithDescriptor:descriptor size:size]:base;
 }
 @class PHKDockCoordinator;
 
@@ -59,6 +80,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 }
 - (void)configureName:(NSString *)name symbol:(NSString *)symbol selected:(BOOL)selected {
     _label.text=name;
+    _label.font=PHKFont(PHKFontSizeSetting(),selected?UIFontWeightSemibold:UIFontWeightMedium);
     UIImageSymbolConfiguration *config=[UIImageSymbolConfiguration configurationWithPointSize:17
         weight:selected?UIImageSymbolWeightSemibold:UIImageSymbolWeightRegular];
     _icon.image=[[UIImage systemImageNamed:symbol] imageWithConfiguration:config];
@@ -75,6 +97,8 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 @property(nonatomic,weak) UITabBarController *host;
 @property(nonatomic,strong) NSArray<PHKTabCell *> *cells;
 @property(nonatomic,strong) UIVisualEffectView *material;
+@property(nonatomic,strong) CAGradientLayer *rainbowBorder;
+@property(nonatomic,strong) CAShapeLayer *borderMask;
 - (void)refresh;
 - (void)updateLayoutForTabBar:(UITabBar *)tabBar;
 @end
@@ -94,6 +118,13 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         _material.layer.cornerRadius=27;
         _material.clipsToBounds=YES;
         [self addSubview:_material];
+        _rainbowBorder=[CAGradientLayer layer];
+        _borderMask=[CAShapeLayer layer];
+        _borderMask.fillColor=UIColor.clearColor.CGColor;
+        _borderMask.strokeColor=UIColor.whiteColor.CGColor;
+        _borderMask.lineWidth=1.6;
+        _rainbowBorder.mask=_borderMask;
+        [self.layer addSublayer:_rainbowBorder];
         NSMutableArray *tabs=[NSMutableArray array];
         for(NSInteger i=0;i<phk::kTabCount;i++){
             PHKTabCell *cell=[PHKTabCell new];
@@ -121,6 +152,12 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 - (void)layoutSubviews {
     [super layoutSubviews];
     _material.frame=self.bounds;
+    [CATransaction begin];[CATransaction setDisableActions:YES];
+    _rainbowBorder.frame=self.bounds;
+    _borderMask.frame=self.bounds;
+    _borderMask.path=[UIBezierPath bezierPathWithRoundedRect:
+        CGRectInset(self.bounds,1,1) cornerRadius:26].CGPath;
+    [CATransaction commit];
     CGFloat w=self.bounds.size.width-8;
     for(NSInteger i=0;i<_cells.count;i++){
         _cells[i].frame=CGRectMake(4+i*w/_cells.count,4,w/_cells.count,MAX(38,self.bounds.size.height-8));
@@ -165,6 +202,12 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
                 @"house",@"person.crop.circle"];
     });
     NSInteger selected=self.host?self.host.selectedIndex:0;
+    _rainbowBorder.hidden=!PHKRainbowEnabled();
+    BOOL animate=self.window!=nil && PHKRainbowEnabled();
+    if(animate && ![_rainbowBorder animationForKey:@"phk-rainbow"])
+        PHKStyleRainbow(_rainbowBorder,YES);
+    else if(!animate && [_rainbowBorder animationForKey:@"phk-rainbow"])
+        PHKStyleRainbow(_rainbowBorder,NO);
     for(NSInteger i=0;i<_cells.count;i++)
         [_cells[i] configureName:(PHKEnglish()?en:vi)[i] symbol:icons[i] selected:i==selected];
 }
@@ -178,7 +221,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 @interface PHKDockCoordinator : NSObject
 @property(nonatomic,weak) UITabBarController *target;
 @property(nonatomic,strong) PHKGlassDock *dock;
-@property(nonatomic,strong) UILabel *brand;
+@property(nonatomic,strong) PHKRainbowBrand *brand;
 @property(nonatomic,strong) NSTimer *poller;
 + (instancetype)shared;
 - (void)start;
@@ -193,6 +236,13 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 @property(nonatomic,strong) UILabel *subtitle;
 @property(nonatomic,strong) UILabel *delayLabel;
 @property(nonatomic,strong) UIStackView *paletteRow;
+@property(nonatomic,strong) UISwitch *rainbowSwitch;
+@property(nonatomic,strong) UILabel *fontLabel;
+@property(nonatomic,strong) UISlider *fontSlider;
+@property(nonatomic,strong) UIButton *composerButton;
+@property(nonatomic,strong) UIButton *randomButton;
+@property(nonatomic,strong) UIButton *stickerButton;
+@property(nonatomic,strong) UIButton *closeButton;
 - (void)refresh;
 @end
 
@@ -226,17 +276,32 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         [panel.leadingAnchor constraintGreaterThanOrEqualToAnchor:root.leadingAnchor constant:12],
         [panel.trailingAnchor constraintLessThanOrEqualToAnchor:root.trailingAnchor constant:-12],
         [panel.widthAnchor constraintLessThanOrEqualToConstant:430],
-        [panel.widthAnchor constraintEqualToAnchor:root.widthAnchor constant:-24]
+        [panel.heightAnchor constraintEqualToAnchor:root.safeAreaLayoutGuide.heightAnchor multiplier:.80]
+    ]];
+    NSLayoutConstraint *preferredWidth=[panel.widthAnchor constraintEqualToAnchor:root.widthAnchor constant:-24];
+    preferredWidth.priority=UILayoutPriorityDefaultHigh;
+    preferredWidth.active=YES;
+    UIScrollView *scroll=[UIScrollView new];
+    scroll.translatesAutoresizingMaskIntoConstraints=NO;
+    scroll.showsVerticalScrollIndicator=NO;
+    scroll.keyboardDismissMode=UIScrollViewKeyboardDismissModeInteractive;
+    [panel.contentView addSubview:scroll];
+    [NSLayoutConstraint activateConstraints:@[
+        [scroll.leadingAnchor constraintEqualToAnchor:panel.contentView.leadingAnchor],
+        [scroll.trailingAnchor constraintEqualToAnchor:panel.contentView.trailingAnchor],
+        [scroll.topAnchor constraintEqualToAnchor:panel.contentView.topAnchor],
+        [scroll.bottomAnchor constraintEqualToAnchor:panel.contentView.bottomAnchor]
     ]];
     UIStackView *stack=[UIStackView new];
     stack.axis=UILayoutConstraintAxisVertical;stack.spacing=13;
     stack.translatesAutoresizingMaskIntoConstraints=NO;
-    [panel.contentView addSubview:stack];
+    [scroll addSubview:stack];
     [NSLayoutConstraint activateConstraints:@[
-        [stack.topAnchor constraintEqualToAnchor:panel.contentView.topAnchor constant:21],
-        [stack.leadingAnchor constraintEqualToAnchor:panel.contentView.leadingAnchor constant:18],
-        [stack.trailingAnchor constraintEqualToAnchor:panel.contentView.trailingAnchor constant:-18],
-        [stack.bottomAnchor constraintEqualToAnchor:panel.contentView.bottomAnchor constant:-19]
+        [stack.topAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.topAnchor constant:21],
+        [stack.leadingAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.leadingAnchor constant:18],
+        [stack.trailingAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.trailingAnchor constant:-18],
+        [stack.bottomAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.bottomAnchor constant:-19],
+        [stack.widthAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.widthAnchor constant:-36]
     ]];
     [stack addArrangedSubview:[self label:@"Zalo" size:23 weight:UIFontWeightBold color:UIColor.whiteColor]];
     [stack addArrangedSubview:[self label:@"Developer Phan Anh Khôi" size:12
@@ -264,8 +329,38 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         [palette addArrangedSubview:b];
     }
     [stack addArrangedSubview:palette];
-    [stack addArrangedSubview:[self action:PHKText(@"Màu ngẫu nhiên đẹp",@"Random curated color")
-                                     selector:@selector(randomColor)]];
+    self.randomButton=[self action:PHKText(@"Màu ngẫu nhiên đẹp",@"Random curated color")
+                                     selector:@selector(randomColor)];
+    [stack addArrangedSubview:self.randomButton];
+    UIStackView *rainbowRow=[UIStackView new];
+    rainbowRow.axis=UILayoutConstraintAxisHorizontal;
+    rainbowRow.alignment=UIStackViewAlignmentCenter;
+    rainbowRow.distribution=UIStackViewDistributionEqualSpacing;
+    UILabel *rainbowTitle=[self label:@"Cầu vồng liên tục" size:13 weight:UIFontWeightMedium color:UIColor.whiteColor];
+    [rainbowRow addArrangedSubview:rainbowTitle];
+    self.rainbowSwitch=[UISwitch new];
+    self.rainbowSwitch.on=PHKRainbowEnabled();
+    self.rainbowSwitch.onTintColor=PHKAccent();
+    [self.rainbowSwitch addTarget:self action:@selector(rainbowChanged:)
+                forControlEvents:UIControlEventValueChanged];
+    [rainbowRow addArrangedSubview:self.rainbowSwitch];
+    [stack addArrangedSubview:rainbowRow];
+    self.fontLabel=[self label:@"" size:12 weight:UIFontWeightMedium color:UIColor.whiteColor];
+    [stack addArrangedSubview:self.fontLabel];
+    self.fontSlider=[UISlider new];
+    self.fontSlider.minimumValue=10;
+    self.fontSlider.maximumValue=18;
+    self.fontSlider.value=PHKFontSizeSetting();
+    [self.fontSlider addTarget:self action:@selector(fontSizeChanged:)
+             forControlEvents:UIControlEventValueChanged];
+    [stack addArrangedSubview:self.fontSlider];
+    UISegmentedControl *fontStyle=[[UISegmentedControl alloc]
+       initWithItems:@[@"SF",@"Rounded",@"Serif"]];
+    fontStyle.selectedSegmentIndex=MIN(2,MAX(0,
+        [NSUserDefaults.standardUserDefaults integerForKey:kFontStyleKey]));
+    [fontStyle addTarget:self action:@selector(fontStyleChanged:)
+        forControlEvents:UIControlEventValueChanged];
+    [stack addArrangedSubview:fontStyle];
     UISegmentedControl *language=[[UISegmentedControl alloc]initWithItems:@[@"VN",@"EN"]];
     language.selectedSegmentIndex=PHKEnglish()?1:0;
     [language addTarget:self action:@selector(languageChanged:) forControlEvents:UIControlEventValueChanged];
@@ -278,9 +373,14 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     delay.tintColor=PHKAccent();
     [delay addTarget:self action:@selector(delayChanged:) forControlEvents:UIControlEventValueChanged];
     [stack addArrangedSubview:delay];
-    [stack addArrangedSubview:[self action:PHKText(@"Chọn ảnh → PNG sticker",@"Image → PNG sticker")
-                                     selector:@selector(pickSticker)]];
-    [stack addArrangedSubview:[self action:PHKText(@"Đóng",@"Close") selector:@selector(close)]];
+    self.composerButton=[self action:PHKText(@"Soạn tin · chat / nhóm",@"Compose · chat / group")
+                          selector:@selector(openComposer)];
+    [stack addArrangedSubview:self.composerButton];
+    self.stickerButton=[self action:PHKText(@"Chọn ảnh → PNG sticker",@"Image → PNG sticker")
+                                     selector:@selector(pickSticker)];
+    [stack addArrangedSubview:self.stickerButton];
+    self.closeButton=[self action:PHKText(@"Đóng",@"Close") selector:@selector(close)];
+    [stack addArrangedSubview:self.closeButton];
     [self refresh];
 }
 - (void)refresh {
@@ -298,6 +398,38 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     NSInteger selected=[NSUserDefaults.standardUserDefaults integerForKey:kColorKey];
     for(UIButton *button in self.paletteRow.arrangedSubviews)
         button.layer.borderWidth=(button.tag==selected)?2.5:0;
+    self.fontLabel.text=[NSString stringWithFormat:@"%@: %.0f pt",
+        PHKText(@"Cỡ chữ menu",@"Menu font size"),PHKFontSizeSetting()];
+    [self.randomButton setTitle:PHKText(@"Màu ngẫu nhiên đẹp",@"Random curated color")
+                     forState:UIControlStateNormal];
+    [self.stickerButton setTitle:PHKText(@"Chọn ảnh → PNG sticker",@"Image → PNG sticker")
+                     forState:UIControlStateNormal];
+    [self.composerButton setTitle:PHKText(@"Soạn tin · chat / nhóm",@"Compose · chat / group")
+                     forState:UIControlStateNormal];
+    [self.closeButton setTitle:PHKText(@"Đóng",@"Close") forState:UIControlStateNormal];
+}
+- (void)rainbowChanged:(UISwitch *)sender {
+    [NSUserDefaults.standardUserDefaults setBool:sender.on forKey:kRainbowKey];
+    [self.owner refreshDock];[self refresh];
+}
+- (void)fontSizeChanged:(UISlider *)sender {
+    NSInteger value=MAX(10,MIN(18,(NSInteger)lroundf(sender.value)));
+    [NSUserDefaults.standardUserDefaults setInteger:value forKey:kFontSizeKey];
+    [self.owner refreshDock];[self refresh];
+}
+- (void)fontStyleChanged:(UISegmentedControl *)sender {
+    [NSUserDefaults.standardUserDefaults setInteger:sender.selectedSegmentIndex
+                                                forKey:kFontStyleKey];
+    [self.owner refreshDock];[self refresh];
+}
+- (void)openComposer {
+    PHKComposerController *composer=[PHKComposerController new];
+    if(@available(iOS 15.0,*)){
+        UISheetPresentationController *sheet=composer.sheetPresentationController;
+        sheet.detents=@[UISheetPresentationControllerDetent.largeDetent];
+        sheet.prefersGrabberVisible=YES;
+    }
+    [self presentViewController:composer animated:YES completion:nil];
 }
 - (void)pickColor:(UIButton *)button {
     [NSUserDefaults.standardUserDefaults setInteger:button.tag forKey:kColorKey];
@@ -417,14 +549,7 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
         self.dock=[PHKGlassDock new];
         self.dock.host=chosen;
         [chosen.tabBar addSubview:self.dock];
-        UILabel *badge=[UILabel new];
-        badge.text=@"Developer Phan Anh Khôi";
-        badge.textColor=UIColor.whiteColor;
-        badge.font=PHKFont(10,UIFontWeightSemibold);
-        badge.backgroundColor=[UIColor colorWithRed:.18 green:.43 blue:.93 alpha:.9];
-        badge.textAlignment=NSTextAlignmentCenter;
-        badge.layer.cornerRadius=13;
-        badge.clipsToBounds=YES;
+        PHKRainbowBrand *badge=[PHKRainbowBrand new];
         badge.userInteractionEnabled=YES;
         UITapGestureRecognizer *open=[[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(showMenu)];
         [badge addGestureRecognizer:open];
@@ -434,8 +559,9 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
     self.dock.hidden=NO;
     [self.dock updateLayoutForTabBar:chosen.tabBar];
     [chosen.tabBar bringSubviewToFront:self.dock];
-    self.brand.frame=CGRectMake(MAX(0,(chosen.view.bounds.size.width-196)/2),
-         chosen.view.safeAreaInsets.top+2,196,26);
+    self.brand.frame=CGRectMake(MAX(0,(chosen.view.bounds.size.width-198)/2),
+         MAX(3,chosen.view.safeAreaInsets.top-22),198,24);
+    [self.brand updateAppearance];
     [self.dock refresh];
 }
 - (void)threeFingers:(UITapGestureRecognizer *)gesture {
@@ -465,10 +591,13 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
     panel.modalPresentationStyle=UIModalPresentationOverFullScreen;
     [presenter presentViewController:panel animated:NO completion:nil];
 }
-- (void)refreshDock {[self.dock refresh];}
+- (void)refreshDock {
+    [self.dock refresh];
+    [self.brand updateAppearance];
+}
 @end
 
-extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.0.0";}
+extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.1.0";}
 extern "C" __attribute__((visibility("default"))) int PHKIndependentLoaded(void){return 1;}
 extern "C" __attribute__((visibility("default"))) void PHKIndependentShowMenu(void){
     [[PHKDockCoordinator shared] showMenu];
