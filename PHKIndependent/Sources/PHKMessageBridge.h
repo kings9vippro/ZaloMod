@@ -1,6 +1,9 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef void (^PHKSendCompletion)(BOOL success,NSString *status);
 typedef void (^PHKSendHandler)(NSString *recipientID,BOOL group,NSString *message,PHKSendCompletion completion);
 /// Explicit integration contract for an app owned or authorized by the user.
@@ -14,4 +17,7 @@ FOUNDATION_EXPORT BOOL PHKIndependentHasSender(void);
 FOUNDATION_EXPORT BOOL PHKIndependentSendTo(NSString *targetID,BOOL group,
     NSString *message,NSTimeInterval delay,PHKSendCompletion _Nullable completion);
 FOUNDATION_EXPORT void PHKIndependentCancelPending(void);
+#ifdef __cplusplus
+}
+#endif
 NS_ASSUME_NONNULL_END
