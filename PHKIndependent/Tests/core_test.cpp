@@ -9,6 +9,18 @@ int main(){
     assert(parseCommand(".sticker",false)==Command::missingImage);
     assert(parseCommand(".color random",false)==Command::colorRandom);
     assert(parseCommand(".help",false)==Command::help);
+    assert(parseCommand(" .menu ",false)==Command::menu);
+    assert(parseCommand(".color 7",false)==Command::colorIndex);
+    assert(parseCommand(".color 8",false)==Command::none);
+    assert(parseCommand(".font 18",false)==Command::fontSize);
+    assert(parseCommand(".font 30",false)==Command::none);
+    assert(parseCommand(".delay 1",false)==Command::setDelay);
+    assert(parseCommand(".delay 60",false)==Command::setDelay);
+    assert(parseCommand(".delay 0",false)==Command::none);
+    assert(parseCommand(".tagall hidden 100",false)==Command::none);
+    assert(parseCommandDetailed(".color 3",false).value==3);
+    assert(parseCommandDetailed(".font 14",false).value==14);
+    assert(parseCommandDetailed(".delay 5",false).value==5);
     assert(parseCommand(".sticker extra",true)==Command::none);
     assert(indexAt(0,400)==0 && indexAt(399.9,400)==4);
     assert(indexAt(200,400)==2 && indexAt(-20,400)==0);

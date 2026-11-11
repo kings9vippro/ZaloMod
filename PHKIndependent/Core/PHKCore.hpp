@@ -17,8 +17,10 @@ inline constexpr std::array<RGB,7> kPalette{{
     {239,68,68},    // red
 }};
 enum class Command : std::uint8_t {
-    none, sticker, colorRandom, help, missingImage
+    none, sticker, colorRandom, help, missingImage, menu, colorIndex, fontSize, setDelay
 };
+struct ParsedCommand { Command kind; int value; };
+ParsedCommand parseCommandDetailed(std::string_view input,bool hasRepliedImage) noexcept;
 Command parseCommand(std::string_view input, bool hasRepliedImage) noexcept;
 int indexAt(double x,double width,int count=kTabCount) noexcept;
 int swipeIndex(int current,double dx,int count=kTabCount) noexcept;

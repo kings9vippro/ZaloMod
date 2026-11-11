@@ -10,12 +10,38 @@ std::string_view trim(std::string_view s) noexcept {
     return s;
 }
 }
-Command parseCommand(std::string_view input,bool image) noexcept {
+static int decimal(std::string_view text) noexcept {
+    if(text.empty() || text.size()>3)return -1;
+    int result=0;
+    for(const char c:text){
+        if(c<'0'||c>'9')return -1;
+        result=result*10+(c-'0');
+    }
+    return result;
+}
+ParsedCommand parseCommandDetailed(std::string_view input,bool hasImage) noexcept {
     input=trim(input);
-    if(input==".sticker" || input=="/sticker")return image?Command::sticker:Command::missingImage;
-    if(input==".color random" || input==".mau random")return Command::colorRandom;
-    if(input==".help" || input=="/help")return Command::help;
-    return Command::none;
+    if(input==".menu" || input=="/menu")return {Command::menu,0};
+    if(input==".sticker" || input=="/sticker")
+        return {hasImage?Command::sticker:Command::missingImage,0};
+    if(input==".color random" || input==".mau random")return {Command::colorRandom,0};
+    if(input==".help" || input=="/help")return {Command::help,0};
+    if(input.size()>7 && input.substr(0,7)==".color "){
+        const int v=decimal(input.substr(7));
+        if(v>=1&&v<=7)return {Command::colorIndex,v};
+    }
+    if(input.size()>6 && input.substr(0,6)==".font "){
+        const int v=decimal(input.substr(6));
+        if(v>=10&&v<=18)return {Command::fontSize,v};
+    }
+    if(input.size()>7 && input.substr(0,7)==".delay "){
+        const int v=decimal(input.substr(7));
+        if(v>=1&&v<=60)return {Command::setDelay,v};
+    }
+    return {Command::none,0};
+}
+Command parseCommand(std::string_view input,bool image) noexcept {
+    return parseCommandDetailed(input,image).kind;
 }
 int indexAt(double x,double width,int count) noexcept {
     if(count<=0 || count>20 || !std::isfinite(x) || !std::isfinite(width) || width<=0)return -1;
