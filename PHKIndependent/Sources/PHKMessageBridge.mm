@@ -17,14 +17,14 @@ static BOOL PHKIsValidDestination(NSDictionary *item){
         [name isKindOfClass:[NSString class]] && name.length>0 && name.length<=128 &&
         [type isKindOfClass:[NSNumber class]];
 }
-void PHKIndependentRegisterSender(PHKSendHandler handler){
+extern "C" __attribute__((visibility("default"))) void PHKIndependentRegisterSender(PHKSendHandler handler){
     if(!NSThread.isMainThread){
         dispatch_async(dispatch_get_main_queue(),^{PHKIndependentRegisterSender(handler);});
         return;
     }
     sSender=[handler copy];
 }
-void PHKIndependentSetTargets(NSArray<NSDictionary *> *targets){
+extern "C" __attribute__((visibility("default"))) void PHKIndependentSetTargets(NSArray<NSDictionary *> *targets){
     if(!NSThread.isMainThread){
         NSArray *copy=[targets copy];
         dispatch_async(dispatch_get_main_queue(),^{PHKIndependentSetTargets(copy);});
@@ -44,19 +44,19 @@ void PHKIndependentSetTargets(NSArray<NSDictionary *> *targets){
     }
     sTargets=[allowed copy];
 }
-NSArray<NSDictionary *> *PHKIndependentTargets(void){
+extern "C" __attribute__((visibility("default"))) NSArray<NSDictionary *> *PHKIndependentTargets(void){
     if(NSThread.isMainThread)return sTargets?:@[];
     __block NSArray<NSDictionary *> *copy;
     dispatch_sync(dispatch_get_main_queue(),^{copy=sTargets?:@[];});
     return copy;
 }
-BOOL PHKIndependentHasSender(void){
+extern "C" __attribute__((visibility("default"))) BOOL PHKIndependentHasSender(void){
     if(NSThread.isMainThread)return sSender!=nil;
     __block BOOL ready=NO;
     dispatch_sync(dispatch_get_main_queue(),^{ready=sSender!=nil;});
     return ready;
 }
-BOOL PHKIndependentSendTo(NSString *targetID,BOOL group,
+extern "C" __attribute__((visibility("default"))) BOOL PHKIndependentSendTo(NSString *targetID,BOOL group,
        NSString *message,NSTimeInterval delay,PHKSendCompletion completion){
     if(!NSThread.isMainThread){
         __block BOOL queued=NO;
@@ -102,7 +102,7 @@ BOOL PHKIndependentSendTo(NSString *targetID,BOOL group,
     });
     return YES;
 }
-void PHKIndependentCancelPending(void){
+extern "C" __attribute__((visibility("default"))) void PHKIndependentCancelPending(void){
     if(!NSThread.isMainThread){
         dispatch_async(dispatch_get_main_queue(),^{PHKIndependentCancelPending();});return;
     }
