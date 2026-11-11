@@ -39,6 +39,7 @@ jobs:
             -install_name '@rpath/PHKIndependent.dylib' \
             output/PHKIndependent-ui.o output/PHKIndependent-core.o \
             -framework UIKit -framework Foundation -framework QuartzCore \
+            -framework CoreGraphics -framework UniformTypeIdentifiers \
             -o output/PHKIndependent.dylib
           xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentVersion'
           xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentShowMenu'

@@ -1,6 +1,7 @@
 #import "PHKIndependent.h"
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <objc/runtime.h>
 #import <cmath>
 #import "../Core/PHKCore.hpp"
@@ -321,7 +322,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 }
 - (void)pickSticker {
     UIDocumentPickerViewController *picker=[[UIDocumentPickerViewController alloc]
-        initWithDocumentTypes:@[@"public.image"] inMode:UIDocumentPickerModeImport];
+        initForOpeningContentTypes:@[UTTypeImage] asCopy:YES];
     picker.delegate=self;
     [self presentViewController:picker animated:YES completion:nil];
 }
