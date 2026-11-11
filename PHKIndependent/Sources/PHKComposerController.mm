@@ -155,7 +155,7 @@
     if(target.length==0||message.length==0){
         self.status.text=@"Nhập đầy đủ đích đến và nội dung.";return;
     }
-    __weak typeof(self) weakSelf=self;
+    __weak PHKComposerController *weakSelf=self;
     BOOL queued=PHKIndependentSendTo(target,self.type.selectedSegmentIndex==1,
         message,self.delaySlider.value,^(BOOL success,NSString *status){
             dispatch_async(dispatch_get_main_queue(),^{
