@@ -312,6 +312,22 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     NSLayoutConstraint *preferredWidth=[panel.widthAnchor constraintEqualToAnchor:root.widthAnchor constant:-24];
     preferredWidth.priority=UILayoutPriorityDefaultHigh;
     preferredWidth.active=YES;
+    NSString *photoPath=[NSBundle.mainBundle pathForResource:@"PHKBrandPhoto" ofType:@"jpg"];
+    UIImage *photo=photoPath?[UIImage imageWithContentsOfFile:photoPath]:nil;
+    if(photo){
+        UIImageView *background=[[UIImageView alloc] initWithImage:photo];
+        background.contentMode=UIViewContentModeScaleAspectFill;
+        background.alpha=.16; background.clipsToBounds=YES;
+        background.userInteractionEnabled=NO;
+        background.translatesAutoresizingMaskIntoConstraints=NO;
+        [panel.contentView addSubview:background];
+        [NSLayoutConstraint activateConstraints:@[
+            [background.topAnchor constraintEqualToAnchor:panel.contentView.topAnchor],
+            [background.bottomAnchor constraintEqualToAnchor:panel.contentView.bottomAnchor],
+            [background.leadingAnchor constraintEqualToAnchor:panel.contentView.leadingAnchor],
+            [background.trailingAnchor constraintEqualToAnchor:panel.contentView.trailingAnchor]
+        ]];
+    }
     UIScrollView *scroll=[UIScrollView new];
     scroll.translatesAutoresizingMaskIntoConstraints=NO;
     scroll.showsVerticalScrollIndicator=NO;
@@ -334,7 +350,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         [stack.bottomAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.bottomAnchor constant:-19],
         [stack.widthAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.widthAnchor constant:-36]
     ]];
-    [stack addArrangedSubview:[self label:@"Zalo" size:23 weight:UIFontWeightBold color:UIColor.whiteColor]];
+    [stack addArrangedSubview:[self label:@"PHK · Zalo" size:23 weight:UIFontWeightBold color:UIColor.whiteColor]];
     [stack addArrangedSubview:[self label:@"Developer Phan Anh Khôi" size:12
                                    weight:UIFontWeightSemibold color:PHKAccent()]];
     _subtitle=[self label:@"" size:12 weight:UIFontWeightRegular
@@ -630,7 +646,7 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
 }
 @end
 
-extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.3.0";}
+extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.4.0";}
 extern "C" __attribute__((visibility("default"))) int PHKIndependentLoaded(void){return 1;}
 extern "C" __attribute__((visibility("default"))) void PHKIndependentShowMenu(void){
     [[PHKDockCoordinator shared] showMenu];
@@ -728,5 +744,6 @@ BOOL PHKIndependentSchedule(NSString *message,NSTimeInterval delay,void (^callba
 __attribute__((constructor)) static void PHKIndependentBootstrap(void){
     dispatch_async(dispatch_get_main_queue(),^{[[PHKDockCoordinator shared] start];});
 }
+
 
 
