@@ -182,7 +182,13 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     UITabBarController *controller=self.host;
     if(!controller || i<0 || i>=controller.viewControllers.count)return;
     if(controller.selectedIndex==i)return;
+    UIViewController *destination=controller.viewControllers[i];
+    id<UITabBarControllerDelegate> delegate=controller.delegate;
+    if([delegate respondsToSelector:@selector(tabBarController:shouldSelectViewController:)] &&
+       ![delegate tabBarController:controller shouldSelectViewController:destination])return;
     controller.selectedIndex=i;
+    if([delegate respondsToSelector:@selector(tabBarController:didSelectViewController:)])
+        [delegate tabBarController:controller didSelectViewController:destination];
     if(!UIAccessibilityIsReduceMotionEnabled()){
         [[[UISelectionFeedbackGenerator alloc]init] selectionChanged];
         [UIView animateWithDuration:.26 delay:0 usingSpringWithDamping:.78
