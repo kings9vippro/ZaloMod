@@ -8,6 +8,7 @@
 #import "PHKRainbow.h"
 #import "PHKComposerController.h"
 #import "PHKMessageBridge.h"
+extern "C" NSString *PHKIndependentRuntimeProbe(void);
 
 static NSString * const kColorKey=@"dev.phananhkhoi.independent.accent";
 static NSString * const kLanguageKey=@"dev.phananhkhoi.independent.language";
@@ -428,6 +429,9 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     self.stickerButton=[self action:PHKText(@"Chọn ảnh → PNG sticker",@"Image → PNG sticker")
                                      selector:@selector(pickSticker)];
     [stack addArrangedSubview:self.stickerButton];
+    [stack addArrangedSubview:[self action:PHKText(@"Xuất chẩn đoán tương thích",
+                                       @"Export compatibility diagnostics")
+                                      selector:@selector(exportRuntimeProbe)]];
     self.closeButton=[self action:PHKText(@"Đóng",@"Close") selector:@selector(close)];
     [stack addArrangedSubview:self.closeButton];
     [self refresh];
@@ -500,6 +504,21 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     NSUInteger seconds=MAX(1,MIN(60,(NSUInteger)lroundf(slider.value)));
     [NSUserDefaults.standardUserDefaults setFloat:(float)seconds forKey:kDelayKey];
     [self refresh];
+}
+- (void)exportRuntimeProbe {
+    NSString *report=PHKIndependentRuntimeProbe();
+    if(!report.length)return;
+    NSString *file=[NSTemporaryDirectory() stringByAppendingPathComponent:
+                     @"PHK-Zalo-Runtime-Diagnostics.json"];
+    BOOL saved=[report writeToFile:file atomically:YES
+                          encoding:NSUTF8StringEncoding error:nil];
+    if(!saved)return;
+    UIActivityViewController *share=[[UIActivityViewController alloc]
+         initWithActivityItems:@[[NSURL fileURLWithPath:file]] applicationActivities:nil];
+    share.popoverPresentationController.sourceView=self.view;
+    share.popoverPresentationController.sourceRect=
+        CGRectMake(CGRectGetMidX(self.view.bounds),CGRectGetMidY(self.view.bounds),1,1);
+    [self presentViewController:share animated:YES completion:nil];
 }
 - (void)pickSticker {
     UIDocumentPickerViewController *picker=[[UIDocumentPickerViewController alloc]
