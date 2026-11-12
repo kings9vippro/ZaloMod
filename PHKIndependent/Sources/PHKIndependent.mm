@@ -340,6 +340,8 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     _subtitle=[self label:@"" size:12 weight:UIFontWeightRegular
                     color:[UIColor colorWithWhite:1 alpha:.75]];
     [stack addArrangedSubview:_subtitle];
+    UILabel *scope=[self label:PHKText(@"Màu chữ là hiển thị trên máy; chưa gửi định dạng màu tới người nhận. .menu mở bảng khi ô nhập được nhận diện.", @"Text color is local; outgoing rich text is not supported. .menu opens this panel in a supported input.") size:12 weight:UIFontWeightRegular color:[UIColor colorWithWhite:1 alpha:.7]];
+    [stack addArrangedSubview:scope];
     [stack addArrangedSubview:[self label:PHKText(@"7 màu chuẩn",@"7 curated colors") size:12
                                    weight:UIFontWeightSemibold color:UIColor.whiteColor]];
     UIStackView *palette=[UIStackView new];
@@ -430,7 +432,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     for(UIButton *button in self.paletteRow.arrangedSubviews)
         button.layer.borderWidth=(button.tag==selected)?2.5:0;
     self.fontLabel.text=[NSString stringWithFormat:@"%@: %.0f pt",
-        PHKText(@"Cỡ chữ menu",@"Menu font size"),PHKFontSizeSetting()];
+        PHKText(@"Cỡ chữ menu / ô nhập",@"Menu / input font size"),PHKFontSizeSetting()];
     [self.randomButton setTitle:PHKText(@"Màu ngẫu nhiên đẹp",@"Random curated color")
                      forState:UIControlStateNormal];
     [self.stickerButton setTitle:PHKText(@"Chọn ảnh → PNG sticker",@"Image → PNG sticker")
@@ -591,7 +593,7 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
     [self.dock updateLayoutForTabBar:chosen.tabBar];
     [chosen.tabBar bringSubviewToFront:self.dock];
     self.brand.frame=CGRectMake(MAX(0,(chosen.view.bounds.size.width-198)/2),
-         MAX(3,chosen.view.safeAreaInsets.top-22),198,24);
+         MAX(3,chosen.view.safeAreaInsets.top-29),198,24);
     [self.brand updateAppearance];
     [self.dock refresh];
 }
@@ -628,7 +630,7 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
 }
 @end
 
-extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.2.0";}
+extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.3.0";}
 extern "C" __attribute__((visibility("default"))) int PHKIndependentLoaded(void){return 1;}
 extern "C" __attribute__((visibility("default"))) void PHKIndependentShowMenu(void){
     [[PHKDockCoordinator shared] showMenu];
@@ -726,4 +728,5 @@ BOOL PHKIndependentSchedule(NSString *message,NSTimeInterval delay,void (^callba
 __attribute__((constructor)) static void PHKIndependentBootstrap(void){
     dispatch_async(dispatch_get_main_queue(),^{[[PHKDockCoordinator shared] start];});
 }
+
 
