@@ -74,6 +74,25 @@ static BOOL PHKSupportedInput(UIView *view) {
     if(!isCommand)self.commandShown=NO;
     else if(!self.commandShown){
         self.commandShown=YES;
+        // Consume the exact local .menu command, rather than leaving it in a
+        // real chat composer where the user could accidentally send it.
+        // Clear only if there is no active marked-text composition.
+        self.applying=YES;
+        if([input isKindOfClass:[UITextView class]]){
+            UITextView *editor=(UITextView *)input;
+            if(editor.markedTextRange==nil){
+                editor.text=@"";
+                [NSNotificationCenter.defaultCenter postNotificationName:
+                    UITextViewTextDidChangeNotification object:editor];
+            }
+        } else if([input isKindOfClass:[UITextField class]]){
+            UITextField *editor=(UITextField *)input;
+            if(editor.markedTextRange==nil){
+                editor.text=@"";
+                [editor sendActionsForControlEvents:UIControlEventEditingChanged];
+            }
+        }
+        self.applying=NO;
         dispatch_async(dispatch_get_main_queue(),^{PHKIndependentShowMenu();});
     }
 }
