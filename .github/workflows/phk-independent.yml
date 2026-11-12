@@ -45,6 +45,8 @@ jobs:
             -framework UIKit -framework Foundation -framework QuartzCore \
             -framework CoreGraphics -framework UniformTypeIdentifiers \
             -o output/PHKIndependent.dylib
+          # Strip local symbols from our library only; exported integration APIs remain.
+          xcrun --sdk iphoneos strip -x output/PHKIndependent.dylib
           xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentVersion'
           xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentShowMenu'
           xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentStickerPNG'
@@ -63,3 +65,4 @@ jobs:
           name: PHKIndependent-arm64-unsigned-dylib
           path: output/PHKIndependent.dylib
           if-no-files-found: error
+
