@@ -65,6 +65,23 @@ jobs:
               raise SystemExit("Source SHA-256 mismatch.")
           print("Authorized archive downloaded; hash verified if specified.")
           PY
+      - name: Inventory real-source Mach-O offsets and selectors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 PHKIndependent/Tools/inspect_zalo_offsets.py \
+            /tmp/phk_source/original.ipa \
+            --output output/zalo-offset-inventory.json
+          python3 - <<'PY'
+          import json
+          report=json.load(open("output/zalo-offset-inventory.json"))
+          print("Zalo bundle:",report.get("bundle_identifier"))
+          print("Build:",report.get("bundle_version"))
+          print("Mach-O UUID:",report.get("uuid"))
+          print("Named ObjC symbols:",report.get("static_symbol_count_matching"))
+          if report.get("is_encrypted"):
+              raise SystemExit("Encrypted source IPA is unsupported")
+          PY
       - name: Compile PHK independent iOS ARM64 dylib
         shell: bash
         run: |
@@ -126,5 +143,6 @@ jobs:
             output/Zalo-PHK-Unsigned.ipa
             output/build-report.json
             output/dependency-report.json
+            output/zalo-offset-inventory.json
           if-no-files-found: error
           retention-days: 3
