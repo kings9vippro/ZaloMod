@@ -3,24 +3,40 @@
 #import <QuartzCore/QuartzCore.h>
 #import "../Core/PHKCore.hpp"
 
-// Only style editable UIKit text within input containers found in build 260901802.
-// No executable offsets, message interception, or transport-format claims.
-static BOOL PHKSupportedInput(UITextView *view) {
+// Local-only appearance for recognized Zalo chat composer containers.
+// Recognition is version gated and must be verified on an actual device.
+extern "C" void PHKIndependentShowMenu(void);
+static BOOL PHKSupportedInput(UIView *view) {
     if(![NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"] isEqual:@"260901802"] ||
-       !view.editable || !view.window || view.markedTextRange)return NO;
+       !view.window || !view.isFirstResponder)return NO;
+    if([view isKindOfClass:UITextView.class]){
+        UITextView *v=(UITextView *)view;
+        if(!v.editable || v.secureTextEntry || v.markedTextRange)return NO;
+    } else if([view isKindOfClass:UITextField.class]){
+        UITextField *v=(UITextField *)view;
+        if(!v.enabled || v.secureTextEntry || v.markedTextRange)return NO;
+    } else return NO;
+    NSArray<NSString *> *containers=@[@"KBChatInputComponentView",@"ZAInputView",
+        @"ZACustomInputView",@"ZinstantInputView"];
     for(UIView *node=view;node;node=node.superview){
         NSString *name=NSStringFromClass(node.class);
-        if([@[@"KBChatInputComponentView",@"ZAInputView",@"ZACustomInputView"] containsObject:name])return YES;
+        for(NSString *candidate in containers)
+            if([name isEqualToString:candidate] || [name hasSuffix:[@"." stringByAppendingString:candidate]])return YES;
     }
     return NO;
 }
 @interface PHKInputAppearance : NSObject
-@property(nonatomic,weak) UITextView *activeInput;
+@property(nonatomic,weak) UIView *activeInput;
+@property(nonatomic,weak) UIView *lastCommandInput;
+@property(nonatomic) BOOL commandShown;
+@property(nonatomic) BOOL applying;
 @end
 @implementation PHKInputAppearance
 - (void)changed:(NSNotification *)notification {
     if(!NSThread.isMainThread){dispatch_async(dispatch_get_main_queue(),^{[self changed:notification];});return;}
-    UITextView *input=[notification.object isKindOfClass:UITextView.class]?notification.object:self.activeInput;
+    if(self.applying)return;
+    id object=notification.object;
+    UIView *input=([object isKindOfClass:UITextView.class] || [object isKindOfClass:UITextField.class])?object:self.activeInput;
     if(!input || !PHKSupportedInput(input))return;
     self.activeInput=input;
     NSUserDefaults *settings=NSUserDefaults.standardUserDefaults;
@@ -35,11 +51,31 @@ static BOOL PHKSupportedInput(UITextView *view) {
             style==1?UIFontDescriptorSystemDesignRounded:UIFontDescriptorSystemDesignSerif];
         if(descriptor)font=[UIFont fontWithDescriptor:descriptor size:points];
     }
-    // typingAttributes preserves existing rich content and avoids rewriting IME text.
-    NSMutableDictionary *attributes=[input.typingAttributes mutableCopy]?:[NSMutableDictionary new];
-    attributes[NSFontAttributeName]=font;attributes[NSForegroundColorAttributeName]=color;
-    input.typingAttributes=attributes;
+    self.applying=YES;
+    NSString *text=nil;
+    if([input isKindOfClass:UITextView.class]){
+        UITextView *v=(UITextView *)input;
+        if(![v.textColor isEqual:color])v.textColor=color;
+        if(![v.font isEqual:font])v.font=font;
+        NSMutableDictionary *attributes=[v.typingAttributes mutableCopy]?:[NSMutableDictionary new];
+        attributes[NSFontAttributeName]=font;attributes[NSForegroundColorAttributeName]=color;
+        v.typingAttributes=attributes;
+        text=v.text;
+    } else {
+        UITextField *v=(UITextField *)input;
+        if(![v.textColor isEqual:color])v.textColor=color;
+        if(![v.font isEqual:font])v.font=font;
+        text=v.text;
+    }
     input.tintColor=color;
+    self.applying=NO;
+    if(self.lastCommandInput!=input){self.lastCommandInput=input;self.commandShown=NO;}
+    BOOL isCommand=[[text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet] isEqualToString:@".menu"];
+    if(!isCommand)self.commandShown=NO;
+    else if(!self.commandShown){
+        self.commandShown=YES;
+        dispatch_async(dispatch_get_main_queue(),^{PHKIndependentShowMenu();});
+    }
 }
 @end
 
@@ -74,7 +110,7 @@ __attribute__((constructor)) static void PHKInstallInputAppearance(void){
     dispatch_async(dispatch_get_main_queue(),^{
         static PHKInputAppearance *appearance=[PHKInputAppearance new];
         NSNotificationCenter *center=NSNotificationCenter.defaultCenter;
-        for(NSString *name in @[UITextViewTextDidBeginEditingNotification,UITextViewTextDidChangeNotification,NSUserDefaultsDidChangeNotification])
+        for(NSString *name in @[UITextViewTextDidBeginEditingNotification,UITextViewTextDidChangeNotification,UITextFieldTextDidBeginEditingNotification,UITextFieldTextDidChangeNotification,NSUserDefaultsDidChangeNotification])
             [center addObserver:appearance selector:@selector(changed:) name:name object:nil];
         [center addObserverForName:UIWindowDidBecomeKeyNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note){
             UIWindow *window=note.object;
@@ -86,3 +122,4 @@ __attribute__((constructor)) static void PHKInstallInputAppearance(void){
         }];
     });
 }
+
