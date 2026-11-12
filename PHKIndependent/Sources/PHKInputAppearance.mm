@@ -6,8 +6,6 @@
 // Local-only appearance for recognized Zalo chat composer containers.
 // Recognition is version gated and must be verified on an actual device.
 extern "C" void PHKIndependentShowMenu(void);
-extern "C" NSString *PHKIndependentRunLocalCommand(
-    NSString *command, UIImage *repliedImage, NSData **outSticker);
 static BOOL PHKSupportedInput(UIView *view) {
     if(![NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"] isEqual:@"260901802"] ||
        !view.window || !view.isFirstResponder)return NO;
@@ -31,6 +29,7 @@ static BOOL PHKSupportedInput(UIView *view) {
 @property(nonatomic,weak) UIView *activeInput;
 @property(nonatomic,weak) UIView *lastCommandInput;
 @property(nonatomic) BOOL commandShown;
+@property(nonatomic,copy) NSString *lastCommand;
 @property(nonatomic) BOOL applying;
 @end
 @implementation PHKInputAppearance
@@ -71,51 +70,21 @@ static BOOL PHKSupportedInput(UIView *view) {
     }
     input.tintColor=color;
     self.applying=NO;
-    if(self.lastCommandInput!=input){self.lastCommandInput=input;self.commandShown=NO;}
-    // Only exact, known local commands are intercepted. Never intercept
-    // sticker replies or ordinary messages; those require a real host API.
-    NSString *trimmed=[text stringByTrimmingCharactersInSet:
-        NSCharacterSet.whitespaceAndNewlineCharacterSet];
-    const char *bytes=trimmed.UTF8String;
-    const auto parsed=bytes?phk::parseCommandDetailed(bytes,false):
-        phk::ParsedCommand{phk::Command::none,0};
-    BOOL validLocal=(parsed.kind==phk::Command::menu ||
-                     parsed.kind==phk::Command::colorRandom ||
-                     parsed.kind==phk::Command::colorIndex ||
-                     parsed.kind==phk::Command::fontSize ||
-                     parsed.kind==phk::Command::setDelay);
-    if(!validLocal){self.commandShown=NO;return;}
-    if(self.commandShown)return;
-    self.commandShown=YES;
-    // Cancel the literal command before it could be accidentally sent
-    // as a Zalo chat message. Re-entrant editor notifications are ignored.
-    self.applying=YES;
-    if([input isKindOfClass:[UITextView class]]){
-        UITextView *editor=(UITextView *)input;
-        if(editor.markedTextRange==nil){
-            editor.text=@"";
-            [NSNotificationCenter.defaultCenter postNotificationName:
-                UITextViewTextDidChangeNotification object:editor];
-        }
-    } else if([input isKindOfClass:[UITextField class]]){
-        UITextField *editor=(UITextField *)input;
-        if(editor.markedTextRange==nil){
-            editor.text=@"";
-            [editor sendActionsForControlEvents:UIControlEventEditingChanged];
-        }
+    NSString *command=[text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    BOOL isCommand=[command isEqualToString:@".menu"] || [command isEqualToString:@".sticker"];
+    if(self.lastCommandInput!=input){
+        self.lastCommandInput=input;
+        self.commandShown=NO;
+        self.lastCommand=nil;
     }
-    self.applying=NO;
-    NSString *message=PHKIndependentRunLocalCommand(trimmed,nil,NULL);
-    if(message.length)UIAccessibilityPostNotification(
-        UIAccessibilityAnnouncementNotification,message);
-    // Re-evaluate the active editor immediately after a font/color command.
-    if(parsed.kind==phk::Command::colorIndex ||
-       parsed.kind==phk::Command::colorRandom ||
-       parsed.kind==phk::Command::fontSize)
-        dispatch_async(dispatch_get_main_queue(),^{
-            [self changed:[NSNotification notificationWithName:
-                NSUserDefaultsDidChangeNotification object:input]];
-        });
+    if(!isCommand){
+        self.commandShown=NO;
+        self.lastCommand=nil;
+    } else if(!self.commandShown || ![self.lastCommand isEqualToString:command]){
+        self.commandShown=YES;
+        self.lastCommand=[command copy];
+        dispatch_async(dispatch_get_main_queue(),^{PHKIndependentShowMenu();});
+    }
 }
 @end
 
