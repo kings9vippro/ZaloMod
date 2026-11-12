@@ -351,7 +351,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         [stack.widthAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.widthAnchor constant:-36]
     ]];
     [stack addArrangedSubview:[self label:@"PHK · Zalo" size:23 weight:UIFontWeightBold color:UIColor.whiteColor]];
-    [stack addArrangedSubview:[self label:@"Developer Phan Anh Khôi" size:12
+    [stack addArrangedSubview:[self label:PHKText(@"PHK · Phát triển và vận hành bởi Phan Anh Khôi", @"PHK · Developed and maintained by Phan Anh Khôi") size:12
                                    weight:UIFontWeightSemibold color:PHKAccent()]];
     _subtitle=[self label:@"" size:12 weight:UIFontWeightRegular
                     color:[UIColor colorWithWhite:1 alpha:.75]];
