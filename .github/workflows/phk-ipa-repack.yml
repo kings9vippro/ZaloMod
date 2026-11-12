@@ -1,0 +1,148 @@
+name: Repack Real Zalo IPA (Private Repo Only)
+on:
+  workflow_dispatch:
+    inputs:
+      source_ipa_url:
+        description: 'Direct HTTPS link to a permitted decrypted Zalo .ipa or .app ZIP; NOT an App Store page'
+        required: true
+        type: string
+      sha256:
+        description: 'Optional expected SHA-256 of the source archive'
+        required: false
+        type: string
+      independent_only:
+        description: 'Fail if source still strongly links ZaloModVIP.dylib'
+        required: true
+        type: boolean
+        default: true
+permissions:
+  contents: read
+jobs:
+  repackage:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Reject public distribution of third-party app binaries
+        env:
+          PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          if [[ "$PRIVATE" != "true" ]]; then
+            echo "::error::This job packages a proprietary app. Run it from a PRIVATE repo you control, or use the local script."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - name: Download authorized source app
+        env:
+          SOURCE_URL: ${{ inputs.source_ipa_url }}
+          EXPECTED_SHA: ${{ inputs.sha256 }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/phk_source output
+          python3 - <<'PY'
+          import ipaddress,os,urllib.parse
+          link=urllib.parse.urlsplit(os.environ["SOURCE_URL"])
+          if link.scheme!="https" or not link.hostname or link.username or link.password:
+              raise SystemExit("Provide a direct HTTPS file URL.")
+          try:
+              ip=ipaddress.ip_address(link.hostname)
+          except ValueError:
+              pass
+          else:
+              if not ip.is_global:
+                  raise SystemExit("Private, loopback and reserved IPs are not permitted.")
+          print("Source URL format validated.")
+          PY
+          curl --fail --location --silent --show-error --retry 2 \
+            --proto '=https' --connect-timeout 20 --max-time 900 \
+            --output /tmp/phk_source/original.ipa "$SOURCE_URL"
+          python3 - <<'PY'
+          import hashlib,os,pathlib
+          archive=pathlib.Path("/tmp/phk_source/original.ipa")
+          if archive.stat().st_size<1024*1024:
+              raise SystemExit("This download is too small to be an iOS application.")
+          expected=os.environ.get("EXPECTED_SHA","").strip().lower()
+          if expected and hashlib.sha256(archive.read_bytes()).hexdigest()!=expected:
+              raise SystemExit("Source SHA-256 mismatch.")
+          print("Authorized archive downloaded; hash verified if specified.")
+          PY
+      - name: Inventory real-source Mach-O offsets and selectors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 PHKIndependent/Tools/inspect_zalo_offsets.py \
+            /tmp/phk_source/original.ipa \
+            --output output/zalo-offset-inventory.json
+          python3 - <<'PY'
+          import json
+          report=json.load(open("output/zalo-offset-inventory.json"))
+          print("Zalo bundle:",report.get("bundle_identifier"))
+          print("Build:",report.get("bundle_version"))
+          print("Mach-O UUID:",report.get("uuid"))
+          print("Named ObjC symbols:",report.get("static_symbol_count_matching"))
+          if report.get("is_encrypted"):
+              raise SystemExit("Encrypted source IPA is unsupported")
+          PY
+      - name: Compile PHK independent iOS ARM64 dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          for source in PHKIndependent/Sources/*.mm; do
+            xcrun --sdk iphoneos clang++ -std=c++17 -arch arm64 \
+              -isysroot "$SDK" -miphoneos-version-min=15.1 \
+              -O2 -fobjc-arc -fblocks -fobjc-exceptions \
+              -fvisibility=hidden -fstack-protector-strong \
+              -c "$source" -o "output/$(basename "$source" .mm).o"
+          done
+          xcrun --sdk iphoneos clang++ -std=c++17 -arch arm64 \
+            -isysroot "$SDK" -miphoneos-version-min=15.1 \
+            -O2 -fvisibility=hidden -fstack-protector-strong \
+            -c PHKIndependent/Core/PHKCore.cpp -o output/core.o
+          xcrun --sdk iphoneos clang++ -arch arm64 -dynamiclib \
+            -isysroot "$SDK" -miphoneos-version-min=15.1 \
+            -install_name '@rpath/PHKIndependent.dylib' output/*.o \
+            -framework UIKit -framework Foundation -framework QuartzCore \
+            -framework CoreGraphics -framework UniformTypeIdentifiers \
+            -o output/PHKIndependent.dylib
+          xcrun --sdk iphoneos strip -x output/PHKIndependent.dylib
+          xcrun nm -gU output/PHKIndependent.dylib | grep -q '_PHKIndependentShowMenu'
+          if xcrun otool -L output/PHKIndependent.dylib | grep -q 'ZaloModVIP'; then
+            echo "::error::Unexpected linkage to old ZaloModVIP"
+            exit 1
+          fi
+      - name: Repackage real IPA, add photo and verify ZIP/loader
+        env:
+          INDEPENDENT_ONLY: ${{ inputs.independent_only }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -- --source /tmp/phk_source/original.ipa \
+            --dylib output/PHKIndependent.dylib \
+            --output output/Zalo-PHK-Unsigned.ipa \
+            --wallpaper PHKMenuBridge/Resources/MenuWallpaper.jpg \
+            --admin-photo PHKMenuBridge/Resources/AdminCar.jpg
+          if [[ "$INDEPENDENT_ONLY" == "true" ]]; then
+            set -- "$@" --require-independent
+          fi
+          python3 PHKIndependent/Tools/repack_zalo_ipa.py "$@" > output/build-report.json
+          python3 PHKIndependent/Tools/diagnose_ipa.py output/Zalo-PHK-Unsigned.ipa --crc \
+            > output/dependency-report.json
+          python3 - <<'PY'
+          import json
+          report=json.load(open("output/build-report.json"))
+          print("Bundled app:",report["app_bundle"])
+          print("Legacy dependency remains:",report["legacy_strong_dependency"])
+          print("PHK load command inserted:",report["load_command_inserted"])
+          print("IPA SHA-256:",report["sha256"])
+          PY
+      - name: Upload short-lived private IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zalo-PHK-REAL-unsigned-IPA-private
+          path: |
+            output/Zalo-PHK-Unsigned.ipa
+            output/build-report.json
+            output/dependency-report.json
+            output/zalo-offset-inventory.json
+          if-no-files-found: error
+          retention-days: 3

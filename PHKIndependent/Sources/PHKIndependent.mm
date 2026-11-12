@@ -8,6 +8,7 @@
 #import "PHKRainbow.h"
 #import "PHKComposerController.h"
 #import "PHKMessageBridge.h"
+extern "C" NSString *PHKIndependentRuntimeProbe(void);
 
 static NSString * const kColorKey=@"dev.phananhkhoi.independent.accent";
 static NSString * const kLanguageKey=@"dev.phananhkhoi.independent.language";
@@ -87,7 +88,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     UIColor *ink=selected?PHKAccent():[UIColor colorWithWhite:1 alpha:.76];
     _icon.tintColor=ink;
     _label.textColor=ink;
-    self.backgroundColor=selected?[PHKAccent() colorWithAlphaComponent:.18]:UIColor.clearColor;
+    self.backgroundColor=UIColor.clearColor;
     self.accessibilityLabel=name;
     self.accessibilityTraits=UIAccessibilityTraitButton | (selected?UIAccessibilityTraitSelected:0);
 }
@@ -99,6 +100,8 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 @property(nonatomic,strong) UIVisualEffectView *material;
 @property(nonatomic,strong) CAGradientLayer *rainbowBorder;
 @property(nonatomic,strong) CAShapeLayer *borderMask;
+@property(nonatomic,strong) UIView *selectionPill;
+@property(nonatomic) BOOL tracking;
 - (void)refresh;
 - (void)updateLayoutForTabBar:(UITabBar *)tabBar;
 @end
@@ -125,6 +128,11 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         _borderMask.lineWidth=1.6;
         _rainbowBorder.mask=_borderMask;
         [self.layer addSublayer:_rainbowBorder];
+        _selectionPill=[UIView new];
+        _selectionPill.userInteractionEnabled=NO;
+        _selectionPill.layer.cornerRadius=22;
+        _selectionPill.backgroundColor=[PHKAccent() colorWithAlphaComponent:.18];
+        [self addSubview:_selectionPill];
         NSMutableArray *tabs=[NSMutableArray array];
         for(NSInteger i=0;i<phk::kTabCount;i++){
             PHKTabCell *cell=[PHKTabCell new];
@@ -138,7 +146,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
         pan.minimumNumberOfTouches=1;
         pan.maximumNumberOfTouches=1;
-        pan.cancelsTouchesInView=NO;
+        pan.cancelsTouchesInView=YES;
         pan.delegate=self;
         [self addGestureRecognizer:pan];
         [self refresh];
@@ -175,7 +183,13 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     UITabBarController *controller=self.host;
     if(!controller || i<0 || i>=controller.viewControllers.count)return;
     if(controller.selectedIndex==i)return;
+    UIViewController *destination=controller.viewControllers[i];
+    id<UITabBarControllerDelegate> delegate=controller.delegate;
+    if([delegate respondsToSelector:@selector(tabBarController:shouldSelectViewController:)] &&
+       ![delegate tabBarController:controller shouldSelectViewController:destination])return;
     controller.selectedIndex=i;
+    if([delegate respondsToSelector:@selector(tabBarController:didSelectViewController:)])
+        [delegate tabBarController:controller didSelectViewController:destination];
     if(!UIAccessibilityIsReduceMotionEnabled()){
         [[[UISelectionFeedbackGenerator alloc]init] selectionChanged];
         [UIView animateWithDuration:.26 delay:0 usingSpringWithDamping:.78
@@ -185,12 +199,21 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 }
 - (void)tapCell:(PHKTabCell *)sender {[self choose:sender.tabIndex];}
 - (void)pan:(UIPanGestureRecognizer *)gesture {
-    if(gesture.state!=UIGestureRecognizerStateBegan &&
-       gesture.state!=UIGestureRecognizerStateChanged &&
-       gesture.state!=UIGestureRecognizerStateEnded)return;
-    CGPoint value=[gesture locationInView:self];
-    const int desired=phk::indexAt(value.x,self.bounds.size.width,(int)_cells.count);
-    if(desired>=0)[self choose:desired];
+    if(gesture.state==UIGestureRecognizerStateBegan)self.tracking=YES;
+    if(gesture.state==UIGestureRecognizerStateBegan || gesture.state==UIGestureRecognizerStateChanged){
+        CGFloat width=(self.bounds.size.width-8)/MAX(1,self.cells.count);
+        CGFloat x=MAX(4,MIN(self.bounds.size.width-4-width,[gesture locationInView:self].x-width/2));
+        [self.selectionPill.layer removeAllAnimations];
+        self.selectionPill.frame=CGRectMake(x,4,width,MAX(38,self.bounds.size.height-8));
+    } else if(gesture.state==UIGestureRecognizerStateEnded){
+        self.tracking=NO;
+        CGPoint p=[gesture locationInView:self];
+        NSInteger index=phk::indexAt(p.x,self.bounds.size.width,(int)self.cells.count);
+        if(index>=0)[self choose:index];
+        [self refresh];
+    } else if(gesture.state==UIGestureRecognizerStateCancelled || gesture.state==UIGestureRecognizerStateFailed){
+        self.tracking=NO;[self refresh];
+    }
 }
 - (void)refresh {
     static NSArray<NSString *> *vi,*en,*icons;
@@ -202,6 +225,15 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
                 @"house",@"person.crop.circle"];
     });
     NSInteger selected=self.host?self.host.selectedIndex:0;
+    self.selectionPill.backgroundColor=[PHKAccent() colorWithAlphaComponent:.18];
+    if(!self.tracking && selected>=0 && selected<self.cells.count){
+        CGFloat width=(self.bounds.size.width-8)/MAX(1,self.cells.count);
+        CGRect target=CGRectMake(4+selected*width,4,width,MAX(38,self.bounds.size.height-8));
+        [UIView animateWithDuration:UIAccessibilityIsReduceMotionEnabled()?0:.24 delay:0
+            usingSpringWithDamping:.86 initialSpringVelocity:0
+            options:UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowUserInteraction
+            animations:^{self.selectionPill.frame=target;} completion:nil];
+    }
     _rainbowBorder.hidden=!PHKRainbowEnabled();
     BOOL animate=self.window!=nil && PHKRainbowEnabled();
     if(animate && ![_rainbowBorder animationForKey:@"phk-rainbow"])
@@ -281,6 +313,22 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     NSLayoutConstraint *preferredWidth=[panel.widthAnchor constraintEqualToAnchor:root.widthAnchor constant:-24];
     preferredWidth.priority=UILayoutPriorityDefaultHigh;
     preferredWidth.active=YES;
+    NSString *photoPath=[NSBundle.mainBundle pathForResource:@"PHKBrandPhoto" ofType:@"jpg"];
+    UIImage *photo=photoPath?[UIImage imageWithContentsOfFile:photoPath]:nil;
+    if(photo){
+        UIImageView *background=[[UIImageView alloc] initWithImage:photo];
+        background.contentMode=UIViewContentModeScaleAspectFill;
+        background.alpha=.16; background.clipsToBounds=YES;
+        background.userInteractionEnabled=NO;
+        background.translatesAutoresizingMaskIntoConstraints=NO;
+        [panel.contentView addSubview:background];
+        [NSLayoutConstraint activateConstraints:@[
+            [background.topAnchor constraintEqualToAnchor:panel.contentView.topAnchor],
+            [background.bottomAnchor constraintEqualToAnchor:panel.contentView.bottomAnchor],
+            [background.leadingAnchor constraintEqualToAnchor:panel.contentView.leadingAnchor],
+            [background.trailingAnchor constraintEqualToAnchor:panel.contentView.trailingAnchor]
+        ]];
+    }
     UIScrollView *scroll=[UIScrollView new];
     scroll.translatesAutoresizingMaskIntoConstraints=NO;
     scroll.showsVerticalScrollIndicator=NO;
@@ -303,12 +351,14 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         [stack.bottomAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.bottomAnchor constant:-19],
         [stack.widthAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.widthAnchor constant:-36]
     ]];
-    [stack addArrangedSubview:[self label:@"Zalo" size:23 weight:UIFontWeightBold color:UIColor.whiteColor]];
-    [stack addArrangedSubview:[self label:@"Developer Phan Anh Khôi" size:12
+    [stack addArrangedSubview:[self label:@"PHK · Zalo" size:23 weight:UIFontWeightBold color:UIColor.whiteColor]];
+    [stack addArrangedSubview:[self label:PHKText(@"PHK · Phát triển và vận hành bởi Phan Anh Khôi", @"PHK · Developed and maintained by Phan Anh Khôi") size:12
                                    weight:UIFontWeightSemibold color:PHKAccent()]];
     _subtitle=[self label:@"" size:12 weight:UIFontWeightRegular
                     color:[UIColor colorWithWhite:1 alpha:.75]];
     [stack addArrangedSubview:_subtitle];
+    UILabel *scope=[self label:PHKText(@"Màu chữ là hiển thị trên máy; chưa gửi định dạng màu tới người nhận. .menu mở bảng khi ô nhập được nhận diện.", @"Text color is local; outgoing rich text is not supported. .menu opens this panel in a supported input.") size:12 weight:UIFontWeightRegular color:[UIColor colorWithWhite:1 alpha:.7]];
+    [stack addArrangedSubview:scope];
     [stack addArrangedSubview:[self label:PHKText(@"7 màu chuẩn",@"7 curated colors") size:12
                                    weight:UIFontWeightSemibold color:UIColor.whiteColor]];
     UIStackView *palette=[UIStackView new];
@@ -379,6 +429,9 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     self.stickerButton=[self action:PHKText(@"Chọn ảnh → PNG sticker",@"Image → PNG sticker")
                                      selector:@selector(pickSticker)];
     [stack addArrangedSubview:self.stickerButton];
+    [stack addArrangedSubview:[self action:PHKText(@"Xuất chẩn đoán tương thích",
+                                       @"Export compatibility diagnostics")
+                                      selector:@selector(exportRuntimeProbe)]];
     self.closeButton=[self action:PHKText(@"Đóng",@"Close") selector:@selector(close)];
     [stack addArrangedSubview:self.closeButton];
     [self refresh];
@@ -399,7 +452,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     for(UIButton *button in self.paletteRow.arrangedSubviews)
         button.layer.borderWidth=(button.tag==selected)?2.5:0;
     self.fontLabel.text=[NSString stringWithFormat:@"%@: %.0f pt",
-        PHKText(@"Cỡ chữ menu",@"Menu font size"),PHKFontSizeSetting()];
+        PHKText(@"Cỡ chữ menu / ô nhập",@"Menu / input font size"),PHKFontSizeSetting()];
     [self.randomButton setTitle:PHKText(@"Màu ngẫu nhiên đẹp",@"Random curated color")
                      forState:UIControlStateNormal];
     [self.stickerButton setTitle:PHKText(@"Chọn ảnh → PNG sticker",@"Image → PNG sticker")
@@ -451,6 +504,21 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     NSUInteger seconds=MAX(1,MIN(60,(NSUInteger)lroundf(slider.value)));
     [NSUserDefaults.standardUserDefaults setFloat:(float)seconds forKey:kDelayKey];
     [self refresh];
+}
+- (void)exportRuntimeProbe {
+    NSString *report=PHKIndependentRuntimeProbe();
+    if(!report.length)return;
+    NSString *file=[NSTemporaryDirectory() stringByAppendingPathComponent:
+                     @"PHK-Zalo-Runtime-Diagnostics.json"];
+    BOOL saved=[report writeToFile:file atomically:YES
+                          encoding:NSUTF8StringEncoding error:nil];
+    if(!saved)return;
+    UIActivityViewController *share=[[UIActivityViewController alloc]
+         initWithActivityItems:@[[NSURL fileURLWithPath:file]] applicationActivities:nil];
+    share.popoverPresentationController.sourceView=self.view;
+    share.popoverPresentationController.sourceRect=
+        CGRectMake(CGRectGetMidX(self.view.bounds),CGRectGetMidY(self.view.bounds),1,1);
+    [self presentViewController:share animated:YES completion:nil];
 }
 - (void)pickSticker {
     UIDocumentPickerViewController *picker=[[UIDocumentPickerViewController alloc]
@@ -560,7 +628,7 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
     [self.dock updateLayoutForTabBar:chosen.tabBar];
     [chosen.tabBar bringSubviewToFront:self.dock];
     self.brand.frame=CGRectMake(MAX(0,(chosen.view.bounds.size.width-198)/2),
-         MAX(3,chosen.view.safeAreaInsets.top-22),198,24);
+         MAX(3,chosen.view.safeAreaInsets.top-29),198,24);
     [self.brand updateAppearance];
     [self.dock refresh];
 }
@@ -597,7 +665,7 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
 }
 @end
 
-extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.1.0";}
+extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.4.0";}
 extern "C" __attribute__((visibility("default"))) int PHKIndependentLoaded(void){return 1;}
 extern "C" __attribute__((visibility("default"))) void PHKIndependentShowMenu(void){
     [[PHKDockCoordinator shared] showMenu];
@@ -695,3 +763,6 @@ BOOL PHKIndependentSchedule(NSString *message,NSTimeInterval delay,void (^callba
 __attribute__((constructor)) static void PHKIndependentBootstrap(void){
     dispatch_async(dispatch_get_main_queue(),^{[[PHKDockCoordinator shared] start];});
 }
+
+
+
