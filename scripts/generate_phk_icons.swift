@@ -57,7 +57,7 @@ func renderMaster() throws -> Data {
     context.imageInterpolation = .high
     let rect=NSRect(x:0,y:0,width:pixels,height:pixels)
     NSColor(calibratedRed:0.045,green:0.080,blue:0.135,alpha:1).setFill()
-    NSRectFill(rect)
+    NSBezierPath(rect:rect).fill()
     let scale=max(CGFloat(pixels)/original.size.width,CGFloat(pixels)/original.size.height)
     let width=original.size.width*scale,height=original.size.height*scale
     let content=NSRect(x:(CGFloat(pixels)-width)/2,y:(CGFloat(pixels)-height)/2,
@@ -66,7 +66,7 @@ func renderMaster() throws -> Data {
                   operation:.sourceOver,fraction:1)
     // A dark brand band for legibility, not the official Zalo icon.
     NSColor(calibratedRed:0.025,green:0.035,blue:0.055,alpha:0.86).setFill()
-    NSRectFill(NSRect(x:0,y:0,width:pixels,height:228))
+    NSBezierPath(rect:NSRect(x:0,y:0,width:pixels,height:228)).fill()
     let title=NSAttributedString(string:"PHK",attributes:[
         .font:NSFont.systemFont(ofSize:154,weight:.heavy),
         .foregroundColor:NSColor.white
