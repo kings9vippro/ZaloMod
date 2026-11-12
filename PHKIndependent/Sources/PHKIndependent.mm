@@ -87,7 +87,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
     UIColor *ink=selected?PHKAccent():[UIColor colorWithWhite:1 alpha:.76];
     _icon.tintColor=ink;
     _label.textColor=ink;
-    self.backgroundColor=selected?[PHKAccent() colorWithAlphaComponent:.18]:UIColor.clearColor;
+    self.backgroundColor=UIColor.clearColor;
     self.accessibilityLabel=name;
     self.accessibilityTraits=UIAccessibilityTraitButton | (selected?UIAccessibilityTraitSelected:0);
 }
@@ -99,6 +99,8 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 @property(nonatomic,strong) UIVisualEffectView *material;
 @property(nonatomic,strong) CAGradientLayer *rainbowBorder;
 @property(nonatomic,strong) CAShapeLayer *borderMask;
+@property(nonatomic,strong) UIView *selectionPill;
+@property(nonatomic) BOOL tracking;
 - (void)refresh;
 - (void)updateLayoutForTabBar:(UITabBar *)tabBar;
 @end
@@ -125,6 +127,11 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         _borderMask.lineWidth=1.6;
         _rainbowBorder.mask=_borderMask;
         [self.layer addSublayer:_rainbowBorder];
+        _selectionPill=[UIView new];
+        _selectionPill.userInteractionEnabled=NO;
+        _selectionPill.layer.cornerRadius=22;
+        _selectionPill.backgroundColor=[PHKAccent() colorWithAlphaComponent:.18];
+        [self addSubview:_selectionPill];
         NSMutableArray *tabs=[NSMutableArray array];
         for(NSInteger i=0;i<phk::kTabCount;i++){
             PHKTabCell *cell=[PHKTabCell new];
@@ -138,7 +145,7 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
         UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
         pan.minimumNumberOfTouches=1;
         pan.maximumNumberOfTouches=1;
-        pan.cancelsTouchesInView=NO;
+        pan.cancelsTouchesInView=YES;
         pan.delegate=self;
         [self addGestureRecognizer:pan];
         [self refresh];
@@ -185,12 +192,21 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
 }
 - (void)tapCell:(PHKTabCell *)sender {[self choose:sender.tabIndex];}
 - (void)pan:(UIPanGestureRecognizer *)gesture {
-    if(gesture.state!=UIGestureRecognizerStateBegan &&
-       gesture.state!=UIGestureRecognizerStateChanged &&
-       gesture.state!=UIGestureRecognizerStateEnded)return;
-    CGPoint value=[gesture locationInView:self];
-    const int desired=phk::indexAt(value.x,self.bounds.size.width,(int)_cells.count);
-    if(desired>=0)[self choose:desired];
+    if(gesture.state==UIGestureRecognizerStateBegan)self.tracking=YES;
+    if(gesture.state==UIGestureRecognizerStateBegan || gesture.state==UIGestureRecognizerStateChanged){
+        CGFloat width=(self.bounds.size.width-8)/MAX(1,self.cells.count);
+        CGFloat x=MAX(4,MIN(self.bounds.size.width-4-width,[gesture locationInView:self].x-width/2));
+        [self.selectionPill.layer removeAllAnimations];
+        self.selectionPill.frame=CGRectMake(x,4,width,MAX(38,self.bounds.size.height-8));
+    } else if(gesture.state==UIGestureRecognizerStateEnded){
+        self.tracking=NO;
+        CGPoint p=[gesture locationInView:self];
+        NSInteger index=phk::indexAt(p.x,self.bounds.size.width,(int)self.cells.count);
+        if(index>=0)[self choose:index];
+        [self refresh];
+    } else if(gesture.state==UIGestureRecognizerStateCancelled || gesture.state==UIGestureRecognizerStateFailed){
+        self.tracking=NO;[self refresh];
+    }
 }
 - (void)refresh {
     static NSArray<NSString *> *vi,*en,*icons;
@@ -202,6 +218,15 @@ static UIFont *PHKFont(CGFloat size,UIFontWeight weight){
                 @"house",@"person.crop.circle"];
     });
     NSInteger selected=self.host?self.host.selectedIndex:0;
+    self.selectionPill.backgroundColor=[PHKAccent() colorWithAlphaComponent:.18];
+    if(!self.tracking && selected>=0 && selected<self.cells.count){
+        CGFloat width=(self.bounds.size.width-8)/MAX(1,self.cells.count);
+        CGRect target=CGRectMake(4+selected*width,4,width,MAX(38,self.bounds.size.height-8));
+        [UIView animateWithDuration:UIAccessibilityIsReduceMotionEnabled()?0:.24 delay:0
+            usingSpringWithDamping:.86 initialSpringVelocity:0
+            options:UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowUserInteraction
+            animations:^{self.selectionPill.frame=target;} completion:nil];
+    }
     _rainbowBorder.hidden=!PHKRainbowEnabled();
     BOOL animate=self.window!=nil && PHKRainbowEnabled();
     if(animate && ![_rainbowBorder animationForKey:@"phk-rainbow"])
@@ -597,7 +622,7 @@ static UITabBarController *PHKLocateTab(UIViewController *candidate,int depth) {
 }
 @end
 
-extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.1.0";}
+extern "C" __attribute__((visibility("default"))) const char *PHKIndependentVersion(void){return "1.2.0";}
 extern "C" __attribute__((visibility("default"))) int PHKIndependentLoaded(void){return 1;}
 extern "C" __attribute__((visibility("default"))) void PHKIndependentShowMenu(void){
     [[PHKDockCoordinator shared] showMenu];
@@ -695,3 +720,4 @@ BOOL PHKIndependentSchedule(NSString *message,NSTimeInterval delay,void (^callba
 __attribute__((constructor)) static void PHKIndependentBootstrap(void){
     dispatch_async(dispatch_get_main_queue(),^{[[PHKDockCoordinator shared] start];});
 }
+
