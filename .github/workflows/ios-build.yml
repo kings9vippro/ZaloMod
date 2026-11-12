@@ -14,6 +14,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
         run: brew install xcodegen
+      - name: Generate distinct PHK icon set from project photo
+        run: |
+          swift scripts/generate_phk_icons.swift \
+            iOS/Resources/Assets.xcassets/AdminCar.imageset/admin-car.jpg \
+            iOS/Resources/Assets.xcassets/AppIcon.appiconset
+          python3 scripts/validate_phk_icons.py \
+            iOS/Resources/Assets.xcassets/AppIcon.appiconset
       - name: Generate Xcode project
         run: xcodegen generate --spec project.yml
       - name: Verify C++ core
