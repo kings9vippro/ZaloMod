@@ -45,6 +45,11 @@ jobs:
           unzip -tq out/PHKControl-UNSIGNED.ipa
           unzip -Z1 out/PHKControl-UNSIGNED.ipa | grep -q 'Payload/PHKControl.app/Info.plist'
           xcrun --sdk iphoneos lipo -info build-device/Build/Products/Release-iphoneos/PHKControl.app/PHKControl | grep -q arm64
+          INFO="build-device/Build/Products/Release-iphoneos/PHKControl.app/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$INFO")" = "Zalo PHK"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$INFO")" = "AppIcon"
+          test -s build-device/Build/Products/Release-iphoneos/PHKControl.app/Assets.car
+          echo 'Validated Zalo PHK display label, AppIcon catalog and Assets.car.'
           if unzip -Z1 out/PHKControl-UNSIGNED.ipa | grep -Fq 'PHKStandalone.dylib'; then
             echo 'ERROR: Independent native IPA should not package the injected standalone dylib.' >&2
             exit 1

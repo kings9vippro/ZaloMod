@@ -6,7 +6,7 @@ The existing branch builds two separate things:
 2. **Zalo PHK** is the separate first-party UI demonstration app, bundle ID dev.phananhkhoi.control. This app has sample local screens and does not authenticate to Zalo.
 
 ## App label and icons
-The native demonstration app's home-screen name is now **Zalo PHK**. The icon generator uses the user-provided vehicle image in iOS/Resources/Assets.xcassets/AdminCar.imageset and overlays the distinct PHK monogram. It does not use the official Zalo icon.
+The native demonstration app's home-screen name is now **Zalo PHK**. The icon generator uses the user-provided vehicle image in iOS/Resources/Assets.xcassets/AdminCar.imageset and preserves its aspect ratio on an opaque navy canvas. It does not use the official Zalo icon.
 
 The icon source stays in the repository; build assets are recreated deterministically on macOS using:
 
